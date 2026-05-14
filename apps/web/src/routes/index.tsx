@@ -1,6 +1,8 @@
-import { createRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 
-import { rootRoute } from './__root';
+export const Route = createFileRoute('/')({
+  component: HomePage,
+});
 
 function HomePage() {
   return (
@@ -28,9 +30,3 @@ function HomePage() {
     </div>
   );
 }
-
-export const indexRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/',
-  component: HomePage,
-});

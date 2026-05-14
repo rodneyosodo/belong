@@ -8,11 +8,12 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "lint": "oxlint",
-    "format": "oxfmt"
+    "lint": "oxlint --ignore-pattern src/routeTree.gen.ts",
+    "format": "oxfmt 'src/**' '!src/routeTree.gen.ts'"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.169.2",
+    "@tanstack/react-router-devtools": "^1.166.13",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.6.11",
     "lucide-react": "^1.16.0",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/router-plugin": "^1.167.35",
     "@types/node": "^25.8.0",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",

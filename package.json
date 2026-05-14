@@ -12,7 +12,7 @@
     "lint": "turbo lint",
     "lint:fix": "oxlint --fix",
     "format": "turbo format",
-    "format:check": "oxfmt --check",
+    "format:check": "oxfmt --check 'apps/*/src/**' 'packages/*/src/**' '!apps/web/src/routeTree.gen.ts'",
     "typecheck": "turbo typecheck"
   },
   "devDependencies": {
