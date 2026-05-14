@@ -12,6 +12,7 @@
     "format": "oxfmt"
   },
   "dependencies": {
+    "@tanstack/react-router": "^1.169.2",
     "@workspace/ui": "workspace:*",
     "better-auth": "^1.6.11",
     "lucide-react": "^1.16.0",

@@ -1,9 +1,9 @@
-import { createAuthClient } from "better-auth/react";
-import { usernameClient } from "better-auth/client/plugins";
-import { anonymousClient } from "better-auth/client/plugins";
+import { usernameClient } from 'better-auth/client/plugins';
+import { anonymousClient } from 'better-auth/client/plugins';
+import { createAuthClient } from 'better-auth/react';
 
 export const authClient = createAuthClient({
-  baseURL: (Bun.env.BELONG_BACKEND_URL as string) || "http://localhost:5090",
+  baseURL: (Bun.env.BELONG_BACKEND_URL as string) || 'http://localhost:5090',
   plugins: [usernameClient(), anonymousClient()],
   socialProviders: {
     google: {

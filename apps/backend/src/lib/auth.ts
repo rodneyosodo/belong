@@ -1,15 +1,14 @@
-import { betterAuth } from "better-auth";
-import { Pool } from "pg";
-import { username } from "better-auth/plugins";
-import { anonymous } from "better-auth/plugins";
-import { bearer } from "better-auth/plugins";
+import { betterAuth } from 'better-auth';
+import { username } from 'better-auth/plugins';
+import { anonymous } from 'better-auth/plugins';
+import { bearer } from 'better-auth/plugins';
+import { Pool } from 'pg';
 
 export const auth = betterAuth({
-  baseURL: (Bun.env.BETTER_AUTH_URL as string) || "http://localhost:5090",
+  baseURL: (Bun.env.BETTER_AUTH_URL as string) || 'http://localhost:5090',
   database: new Pool({
     connectionString:
-      (Bun.env.BELONG_DB_URI as string) ||
-      "postgresql://belong:belong@localhost:5432/belong",
+      (Bun.env.BELONG_DB_URI as string) || 'postgresql://belong:belong@localhost:5432/belong',
   }),
   emailAndPassword: {
     enabled: true,
