@@ -1,5 +1,7 @@
+import { useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { AppSidebar } from "@/components/app-sidebar"
+import { NewTreeDialog } from "@/components/new-tree-dialog"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -55,6 +57,8 @@ const trees = [
 ]
 
 function HomePage() {
+  const [newTreeOpen, setNewTreeOpen] = useState(false)
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -88,7 +92,10 @@ function HomePage() {
                 className="h-9 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] pl-9 pr-4 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
               />
             </div>
-            <button className="flex items-center gap-2 rounded-lg bg-[#7D6B3D] px-4 py-2 text-sm font-medium text-[#F5F2E9] hover:bg-[#6A5A32]">
+            <button
+              onClick={() => setNewTreeOpen(true)}
+              className="flex items-center gap-2 rounded-lg bg-[#7D6B3D] px-4 py-2 text-sm font-medium text-[#F5F2E9] hover:bg-[#6A5A32]"
+            >
               <PlusIcon className="size-4" />
               <span className="hidden sm:inline">New Tree</span>
             </button>
@@ -155,6 +162,7 @@ function HomePage() {
           </div>
         </div>
       </SidebarInset>
+      <NewTreeDialog open={newTreeOpen} onOpenChange={setNewTreeOpen} />
     </SidebarProvider>
   )
 }
