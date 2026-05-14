@@ -15,16 +15,16 @@ const betterAuthView = (context: Context) => {
 };
 
 const app = new Elysia()
-  .all('/api/auth/*', betterAuthView)
-  .get('/', () => 'Hello Elysia')
   .use(
     cors({
-      origin: (Bun.env.BELONG_FRONTEND_URL as string) || 'http://localhost:5091',
+      origin: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       credentials: true,
       allowedHeaders: ['Content-Type', 'Authorization'],
     }),
   )
+  .all('/api/auth/*', betterAuthView)
+  .get('/', () => 'Hello Elysia')
   .listen(5090);
 
 // oxlint-disable-next-line no-console

@@ -1,0 +1,3 @@
+window.__ENV__ = {
+  BELONG_BACKEND_URL: "http://localhost:5090",
+};

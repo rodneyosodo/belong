@@ -6,6 +6,7 @@ import { Pool } from 'pg';
 
 export const auth = betterAuth({
   baseURL: (Bun.env.BETTER_AUTH_URL as string) || 'http://localhost:5090',
+  trustedOrigins: [(Bun.env.BELONG_FRONTEND_URL as string) || 'http://localhost:5091'],
   database: new Pool({
     connectionString:
       (Bun.env.BELONG_DB_URI as string) || 'postgresql://belong:belong@localhost:5432/belong',

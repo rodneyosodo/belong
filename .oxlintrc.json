@@ -21,6 +21,7 @@
     "no-unused-vars": "off",
     "typescript/no-unused-vars": "error",
     "react/react-in-jsx-scope": "off",
-    "import/no-unassigned-import": "off"
+    "import/no-unassigned-import": "off",
+    "no-underscore-dangle": ["warn", { "allow": ["__ENV__"] }]
   }
 }

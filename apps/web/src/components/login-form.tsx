@@ -1,11 +1,14 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
 import { cn } from '@workspace/ui/lib/utils';
-import { Eye, EyeOff, LucideGitBranch, LucideUpload, LucideUsers } from 'lucide-react';
+import { Eye, EyeOff, Loader2, LucideGitBranch, LucideUpload, LucideUsers } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { signIn } from '@/lib/auth-client';
 
 function LeftPanel() {
   return (
@@ -51,6 +54,28 @@ function Feature({ icon: Icon, text }: { icon: React.ElementType; text: string }
 
 export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    const { error: authError } = await signIn.email({ email, password });
+
+    setLoading(false);
+
+    if (authError) {
+      toast.error(authError.message ?? 'Invalid email or password');
+      return;
+    }
+
+    navigate({ to: '/' });
+  };
 
   return (
     <div className={cn('flex min-h-svh', className)} {...props}>
@@ -92,13 +117,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
             <Separator className="flex-1 bg-[#D6D0BE]" />
           </div>
 
-          <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-[13px] font-medium text-[#2D2926]">
                 Email
               </Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="m@example.com"
                 required
@@ -112,6 +138,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   className="h-11 rounded-lg border-[#D6D0BE] bg-white px-3 pr-10 text-sm text-[#2D2926] placeholder:text-[#8C8782]"
@@ -132,8 +159,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
             </div>
             <Button
               type="submit"
+              disabled={loading}
               className="h-11 rounded-lg bg-[#7D6B3D] text-sm font-semibold text-[#F5F2E9] hover:bg-[#6A5A32]"
             >
+              {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
               Sign In
             </Button>
           </form>
