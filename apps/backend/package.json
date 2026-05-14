@@ -9,7 +9,11 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@elysiajs/cors": "^1.4.2",
+    "@types/pg": "^8.20.0",
+    "better-auth": "^1.6.11",
+    "elysia": "latest",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "bun-types": "latest"

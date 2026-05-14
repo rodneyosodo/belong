@@ -1,0 +1,23 @@
+name: belong-backend-dev
+
+networks:
+  belong-backend-dev-network:
+
+volumes:
+  belong-backend-postgres-volume:
+
+services:
+  belong-backend-db:
+    image: docker.io/postgres:18.3-alpine3.23
+    container_name: belong-backend-db
+    restart: on-failure
+    networks:
+      - belong-backend-dev-network
+    volumes:
+      - belong-backend-postgres-volume:/var/lib/postgresql
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: belong
+      POSTGRES_PASSWORD: belong
+      POSTGRES_DB: belong
