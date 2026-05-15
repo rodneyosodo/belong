@@ -24,8 +24,7 @@
   - `tree_members` — id, tree_id, user_id, role (owner/editor/viewer)
   - `persons` — id, tree_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata (JSONB)
   - `relationships` — id, tree_id, person_a_id, person_b_id, type (parent/child/spouse/sibling/adopted/step-parent/step-child), metadata (JSONB)
-- [x] Better Auth with email/password + Google OAuth (backend + client)
-- [ ] Add GitHub OAuth provider to Better Auth
+- [x] Better Auth with email/password + Google + GitHub OAuth (backend + client)
 - [x] Docker compose for PostgreSQL (compose-dev.yaml)
 - [ ] Create Dockerfile for backend + web production builds
 - [ ] Create docker-compose.yml for full-stack deployment
