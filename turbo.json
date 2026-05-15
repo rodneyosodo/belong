@@ -17,11 +17,13 @@
       "persistent": true
     },
     "docker:build": {
-      "cache": false
+      "cache": false,
+      "env": ["TAG"]
     },
     "docker:push": {
       "cache": false,
-      "dependsOn": ["docker:build"]
+      "dependsOn": ["docker:build"],
+      "env": ["TAG"]
     }
   }
 }

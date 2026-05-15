@@ -16,6 +16,8 @@
     "typecheck": "turbo typecheck",
     "docker:build": "turbo docker:build",
     "docker:push": "turbo docker:push",
+    "docker:build:release": "TAG=$(node -p \"require('./package.json').version\") turbo docker:build",
+    "docker:push:release": "TAG=$(node -p \"require('./package.json').version\") turbo docker:push",
     "docker:up": "docker compose -f docker-compose.yml up -d",
     "docker:down": "docker compose -f docker-compose.yml down"
   },
