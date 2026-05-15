@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Background,
   MiniMap,
@@ -219,6 +220,8 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
     [setNodes, setEdges],
   );
 
+  const navigate = useNavigate();
+
   const onConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) =>
@@ -226,6 +229,13 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
       );
     },
     [setEdges],
+  );
+
+  const onNodeClick = useCallback<NodeMouseHandler>(
+    (_, node) => {
+      navigate({ to: "/person/$id", params: { id: node.id } });
+    },
+    [navigate],
   );
 
   const onNodeContextMenu = useCallback<NodeMouseHandler>(
@@ -399,6 +409,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeContextMenu={onNodeContextMenu}
+        onNodeClick={onNodeClick}
         connectionLineType={ConnectionLineType.SmoothStep}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
