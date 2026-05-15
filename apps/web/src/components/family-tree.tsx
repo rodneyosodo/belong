@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
 import {
   Background,
   MiniMap,
@@ -137,15 +137,17 @@ function findMother(
   return spouseData.gender === "female" ? spouseId : null;
 }
 
-export function FamilyTree() {
+export type FamilyTreeHandle = { addMember: () => void; exportTree: () => void };
+
+export const FamilyTree = forwardRef<FamilyTreeHandle>(function FamilyTree(_props, ref) {
   return (
     <ReactFlowProvider>
-      <FamilyTreeInner />
+      <FamilyTreeInner ref={ref} />
     </ReactFlowProvider>
   );
-}
+});
 
-function FamilyTreeInner() {
+const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_props, ref) {
   const [nodes, setNodes, onNodesChange] = useNodesState(layouted.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layouted.edges);
 
@@ -181,6 +183,27 @@ function FamilyTreeInner() {
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
   const layoutDirectionRef = useRef("TB");
+
+  useImperativeHandle(ref, () => ({
+    addMember: () => {
+      setDialogState({
+        open: true,
+        action: "add",
+        targetId: "",
+        targetData: { label: "", generation: 0 },
+      });
+    },
+    exportTree: () => {
+      const data = JSON.stringify({ nodes, edges }, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "family-tree.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+  }));
 
   const relayout = useCallback(
     (newNodes: Node<FamilyNodeData>[], newEdges: Edge[], direction?: string) => {
@@ -258,6 +281,9 @@ function FamilyTreeInner() {
       let newGeneration = targetData.generation;
 
       switch (action) {
+        case "add":
+          newGeneration = 0;
+          break;
         case "spouse":
         case "sibling":
           break;
@@ -284,6 +310,8 @@ function FamilyTreeInner() {
       const newEdges: Edge[] = [];
 
       switch (action) {
+        case "add":
+          break;
         case "spouse": {
           newEdges.push({
             id: `e${targetId}-${newId}`,
@@ -446,4 +474,4 @@ function FamilyTreeInner() {
       />
     </>
   );
-}
+});

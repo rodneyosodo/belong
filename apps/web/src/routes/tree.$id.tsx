@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { useRef } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
-import { FamilyTree } from "@/components/family-tree"
+import { FamilyTree, type FamilyTreeHandle } from "@/components/family-tree"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,6 +22,8 @@ export const Route = createFileRoute("/tree/$id")({
 })
 
 function TreePage() {
+  const shareRef = useRef<FamilyTreeHandle>(null);
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -46,9 +49,31 @@ function TreePage() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          <div className="ml-auto flex items-center gap-2 px-4">
+            <button
+              onClick={() => shareRef.current?.addMember()}
+              className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+            >
+              Add Member
+            </button>
+            <button
+              onClick={() => shareRef.current?.exportTree()}
+              className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+            >
+              Export
+            </button>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+              }}
+              className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+            >
+              Share
+            </button>
+          </div>
         </header>
         <div className="flex-1">
-          <FamilyTree />
+          <FamilyTree ref={shareRef} />
         </div>
       </SidebarInset>
     </SidebarProvider>

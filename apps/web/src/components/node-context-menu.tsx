@@ -12,7 +12,8 @@ export type ContextMenuAction =
   | "child"
   | "parent"
   | "sibling"
-  | "delete";
+  | "delete"
+  | "add";
 
 interface NodeContextMenuProps {
   x: number;

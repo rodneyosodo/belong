@@ -22,6 +22,11 @@ interface AddPersonDialogProps {
 }
 
 const actionMeta: Record<ContextMenuAction, { icon: typeof HeartIcon; title: string; description: string }> = {
+  add: {
+    icon: UserPlusIcon,
+    title: "Add Member",
+    description: "Add a new family member",
+  },
   spouse: {
     icon: HeartIcon,
     title: "Add Spouse",
