@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Background,
+  MiniMap,
   ReactFlow,
   addEdge,
   ConnectionLineType,
@@ -361,6 +362,15 @@ export function FamilyTree() {
           </button>
         </Panel>
         <Background gap={20} size={1} color="#D6D0BE" />
+        <MiniMap
+          nodeStrokeWidth={3}
+          nodeColor={(n) => {
+            const d = n.data as FamilyNodeData;
+            return d?.gender === "female" ? "#A0866D" : "#7D6B3D";
+          }}
+          maskColor="rgba(0,0,0,0.1)"
+          style={{ background: "#F5F2E9", border: "1px solid #D6D0BE", borderRadius: 8 }}
+        />
       </ReactFlow>
 
       {contextMenu && (
