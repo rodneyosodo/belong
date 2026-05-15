@@ -158,6 +158,16 @@ export function FamilyTree() {
     targetData: { label: "", generation: 0 },
   });
 
+  const stats = useMemo(() => {
+    const memberCount = nodes.length;
+    const living = nodes.filter((n) => {
+      const s = (n.data as unknown as FamilyNodeData).subtitle;
+      return !s || !/^\d{4}-\d{4}$/.test(s);
+    }).length;
+    const generations = new Set(nodes.map((n) => (n.data as unknown as FamilyNodeData).generation)).size;
+    return { memberCount, living, generations };
+  }, [nodes]);
+
   const layoutDirectionRef = useRef("TB");
 
   const relayout = useCallback(
@@ -360,6 +370,14 @@ export function FamilyTree() {
           >
             Horizontal
           </button>
+        </Panel>
+        <Panel position="bottom-left" className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9]/90 px-3 py-2 text-xs text-[#2D2926] backdrop-blur-sm shadow-sm">
+          <div className="flex gap-4">
+            <span><strong>{stats.memberCount}</strong> members</span>
+            <span><strong>{stats.living}</strong> living</span>
+            <span><strong>{stats.generations}</strong> generations</span>
+            <span className="text-[#8C8782]">updated today</span>
+          </div>
         </Panel>
         <Background gap={20} size={1} color="#D6D0BE" />
         <MiniMap
