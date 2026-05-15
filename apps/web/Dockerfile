@@ -15,7 +15,21 @@ RUN bun run --cwd apps/web build
 
 FROM nginx:1.27-alpine AS run
 
+ARG VERSION
+ARG REVISION
+ARG CREATED
+
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
+
+LABEL org.opencontainers.image.source=https://github.com/rodneyosodo/belong
+LABEL org.opencontainers.image.version=${VERSION}
+LABEL org.opencontainers.image.revision=${REVISION}
+LABEL org.opencontainers.image.created=${CREATED}
+LABEL org.opencontainers.image.title="Belong Web"
+LABEL org.opencontainers.image.description="Web frontend for Belong family tree application"
+LABEL org.opencontainers.image.url=https://github.com/rodneyosodo/belong
+LABEL org.opencontainers.image.documentation=https://github.com/rodneyosodo/belong
+LABEL org.opencontainers.image.licenses=MIT
 
 COPY <<'EOF' /etc/nginx/conf.d/default.conf
 server {
