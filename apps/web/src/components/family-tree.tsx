@@ -25,7 +25,7 @@ import FamilyTreeNode from "./family-tree-node";
 import type { FamilyNodeData } from "./family-tree-node";
 import { initialNodes, initialEdges } from "./family-tree-data";
 import { NodeContextMenu, type ContextMenuAction } from "./node-context-menu";
-import { AddPersonDialog } from "./add-person-dialog";
+import { AddPersonDialog, type PersonFormData } from "./add-person-dialog";
 
 const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 
@@ -273,12 +273,13 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
   );
 
   const handleDialogConfirm = useCallback(
-    (data: { name: string; gender: "male" | "female"; avatar?: string }) => {
+    (data: PersonFormData) => {
       if (!dialogState.open) return;
 
       const { action, targetId, targetData } = dialogState;
       const newId = generateId();
       let newGeneration = targetData.generation;
+      const fullName = `${data.firstName} ${data.lastName}`;
 
       switch (action) {
         case "add":
@@ -300,10 +301,16 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
         type: "family",
         position: { x: 0, y: 0 },
         data: {
-          label: data.name,
+          label: fullName,
+          firstName: data.firstName,
+          lastName: data.lastName,
           gender: data.gender,
           generation: newGeneration,
-          avatar: data.avatar,
+          dateOfBirth: data.dateOfBirth,
+          dateOfDeath: data.dateOfDeath,
+          notes: data.notes,
+          photo: data.photo,
+          relationshipType: data.relationshipType,
         },
       };
 

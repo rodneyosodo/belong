@@ -14,11 +14,22 @@ import { Label } from "@workspace/ui/components/label"
 import { HeartIcon, BabyIcon, ArrowUpIcon, UserPlusIcon } from "lucide-react"
 import type { ContextMenuAction } from "./node-context-menu"
 
+export type PersonFormData = {
+  firstName: string
+  lastName: string
+  gender: "male" | "female"
+  dateOfBirth?: string
+  dateOfDeath?: string
+  notes?: string
+  photo?: string
+  relationshipType?: string
+}
+
 interface AddPersonDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   action: ContextMenuAction
-  onConfirm: (data: { name: string; gender: "male" | "female"; avatar?: string }) => void
+  onConfirm: (data: PersonFormData) => void
 }
 
 const actionMeta: Record<ContextMenuAction, { icon: typeof HeartIcon; title: string; description: string }> = {
@@ -54,21 +65,33 @@ const actionMeta: Record<ContextMenuAction, { icon: typeof HeartIcon; title: str
   },
 };
 
+const relationshipTypes = ["Biological", "Adopted", "Step", "Foster", "In-Law", "Godparent", "Other"];
+
 export function AddPersonDialog({
   open,
   onOpenChange,
   action,
   onConfirm,
 }: AddPersonDialogProps) {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [avatar, setAvatar] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [dateOfDeath, setDateOfDeath] = useState("");
+  const [notes, setNotes] = useState("");
+  const [photo, setPhoto] = useState("");
+  const [relationshipType, setRelationshipType] = useState("Biological");
 
   useEffect(() => {
     if (open) {
-      setName("");
+      setFirstName("");
+      setLastName("");
       setGender("male");
-      setAvatar("");
+      setDateOfBirth("");
+      setDateOfDeath("");
+      setNotes("");
+      setPhoto("");
+      setRelationshipType("Biological");
     }
   }, [open]);
 
@@ -76,16 +99,30 @@ export function AddPersonDialog({
   const Icon = meta.icon;
 
   const handleConfirm = () => {
-    if (!name.trim()) return;
-    onConfirm({ name: name.trim(), gender, avatar: avatar.trim() || undefined });
-    setName("");
+    if (!firstName.trim() || !lastName.trim()) return;
+    onConfirm({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      gender,
+      dateOfBirth: dateOfBirth.trim() || undefined,
+      dateOfDeath: dateOfDeath.trim() || undefined,
+      notes: notes.trim() || undefined,
+      photo: photo.trim() || undefined,
+      relationshipType,
+    });
+    setFirstName("");
+    setLastName("");
     setGender("male");
-    setAvatar("");
+    setDateOfBirth("");
+    setDateOfDeath("");
+    setNotes("");
+    setPhoto("");
+    setRelationshipType("Biological");
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-2xl border-[#D6D0BE] bg-[#EDEAD8] p-0 sm:max-w-sm">
+      <DialogContent className="rounded-2xl border-[#D6D0BE] bg-[#EDEAD8] p-0 sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center gap-3 border-b border-[#D6D0BE] p-5">
           <div className="flex size-9 items-center justify-center rounded-xl bg-[#7D6B3D]">
             <Icon className="size-4 text-[#F5F2E9]" />
@@ -101,17 +138,25 @@ export function AddPersonDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-4 px-5 pb-2">
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] font-medium text-[#2D2926]">Name</Label>
-            <Input
-              placeholder="Full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleConfirm();
-              }}
-              className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[13px] font-medium text-[#2D2926]">First Name</Label>
+              <Input
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[13px] font-medium text-[#2D2926]">Last Name</Label>
+              <Input
+                placeholder="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -143,11 +188,72 @@ export function AddPersonDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] font-medium text-[#2D2926]">Avatar URL</Label>
+            <Label className="text-[13px] font-medium text-[#2D2926]">
+              Date of Birth <span className="text-[#8C8782]">(optional)</span>
+            </Label>
+            <Input
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[13px] font-medium text-[#2D2926]">
+              Date of Death <span className="text-[#8C8782]">(optional)</span>
+            </Label>
+            <Input
+              type="date"
+              value={dateOfDeath}
+              onChange={(e) => setDateOfDeath(e.target.value)}
+              className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] outline-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[13px] font-medium text-[#2D2926]">
+              Relationship Type <span className="text-[#8C8782]">(optional)</span>
+            </Label>
+            <div className="flex flex-wrap gap-1.5">
+              {relationshipTypes.map((rt) => (
+                <button
+                  key={rt}
+                  type="button"
+                  onClick={() => setRelationshipType(rt)}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
+                    relationshipType === rt
+                      ? "border-[#7D6B3D] bg-[#F5F2E9] text-[#2D2926]"
+                      : "border-[#D6D0BE] bg-[#F5F2E9] text-[#5E5954] hover:bg-white"
+                  }`}
+                >
+                  {rt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[13px] font-medium text-[#2D2926]">
+              Notes <span className="text-[#8C8782]">(optional)</span>
+            </Label>
+            <textarea
+              placeholder="Any additional notes..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="h-20 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-2 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none resize-none"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[13px] font-medium text-[#2D2926]">
+              Photo URL <span className="text-[#8C8782]">(optional)</span>
+            </Label>
             <Input
               placeholder="https://example.com/photo.jpg"
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
+              value={photo}
+              onChange={(e) => setPhoto(e.target.value)}
               className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
             />
           </div>
@@ -165,7 +271,7 @@ export function AddPersonDialog({
             }
           />
           <Button
-            disabled={!name.trim()}
+            disabled={!firstName.trim() || !lastName.trim()}
             onClick={handleConfirm}
             className="h-9 rounded-lg bg-[#7D6B3D] px-4 text-sm font-semibold text-[#F5F2E9] hover:bg-[#6A5A32] disabled:opacity-50"
           >

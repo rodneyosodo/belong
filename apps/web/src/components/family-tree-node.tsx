@@ -6,7 +6,13 @@ export type FamilyNodeData = {
   subtitle?: string;
   gender?: "male" | "female";
   generation: number;
-  avatar?: string;
+  photo?: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  dateOfDeath?: string;
+  notes?: string;
+  relationshipType?: string;
 };
 
 const genderStyles: Record<string, { border: string; bg: string; accent: string; text: string; subtitle: string }> = {
@@ -30,12 +36,16 @@ function FamilyTreeNode({ data }: NodeProps) {
   const nodeData = data as unknown as FamilyNodeData;
   const gender = nodeData.gender ?? "male";
   const style = genderStyles[gender];
-  const initials = nodeData.label
+  const displayName = nodeData.label;
+  const initials = displayName
     .split(" ")
     .map((w: string) => w[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const dates = nodeData.dateOfBirth
+    ? `${nodeData.dateOfBirth}${nodeData.dateOfDeath ? `-${nodeData.dateOfDeath}` : ""}`
+    : nodeData.subtitle;
 
   return (
     <div
@@ -45,9 +55,9 @@ function FamilyTreeNode({ data }: NodeProps) {
       <Handle type="target" position={Position.Left} id="left" className="!bg-transparent !border-0" />
       <Handle type="source" position={Position.Right} id="right" className="!bg-transparent !border-0" />
       <div className="flex items-center gap-3">
-        {nodeData.avatar ? (
+        {nodeData.photo ? (
           <img
-            src={nodeData.avatar}
+            src={nodeData.photo}
             alt=""
             className="size-9 rounded-full object-cover border border-[#D6D0BE] shrink-0"
           />
@@ -60,14 +70,17 @@ function FamilyTreeNode({ data }: NodeProps) {
         )}
         <div className="min-w-0">
           <p className={`text-sm font-semibold leading-tight truncate ${style.text}`}>
-            {nodeData.label}
+            {displayName}
           </p>
-          {nodeData.subtitle && (
-            <p className={`text-[11px] ${style.subtitle}`}>{nodeData.subtitle}</p>
+          {dates && (
+            <p className={`text-[11px] ${style.subtitle}`}>{dates}</p>
           )}
           <p className={`text-[10px] uppercase tracking-wider ${style.subtitle}`}>
             {gender === "male" ? "\u2642 Male" : "\u2640 Female"}
           </p>
+          {nodeData.relationshipType && (
+            <p className={`text-[10px] ${style.subtitle}`}>{nodeData.relationshipType}</p>
+          )}
         </div>
       </div>
       <Handle
