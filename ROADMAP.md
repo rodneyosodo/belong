@@ -17,13 +17,13 @@
 
 - [x] Scaffold monorepo with Turborepo, bun workspaces (apps/web, apps/backend, packages/ui)
 - [x] Initialize Vite + React + TypeScript + TanStack Router + Tailwind CSS v4
-- [x] Initialize shadcn/ui and install base components (Button, Card, Dialog, Tabs, Dropdown, Sheet, Avatar, Sidebar, Breadcrumb, etc.)
-- [ ] Add shadcn/ui Form component
-- [ ] Set up domain database tables via raw SQL / migration files:
+- [x] Initialize shadcn/ui and install base components (Button, Card, Dialog, Tabs, Dropdown, Sheet, Avatar, Sidebar, Breadcrumb, Field, etc.)
+  - Form system provided by `field` component (Field, FieldGroup, FieldLabel, FieldDescription, FieldError) — base-ui equivalent of shadcn Form
+- [x] Set up domain database tables via raw SQL / migration files:
   - `trees` — id, owner_id, name, description, cover_image, is_public, created_at, updated_at
   - `tree_members` — id, tree_id, user_id, role (owner/editor/viewer)
-  - `persons` — id, tree_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata (JSON)
-  - `relationships` — id, tree_id, person_a_id, person_b_id, type (parent/child/spouse/sibling/adopted/step-parent/step-child), metadata (JSON)
+  - `persons` — id, tree_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata (JSONB)
+  - `relationships` — id, tree_id, person_a_id, person_b_id, type (parent/child/spouse/sibling/adopted/step-parent/step-child), metadata (JSONB)
 - [x] Better Auth with email/password + Google OAuth (backend + client)
 - [ ] Add GitHub OAuth provider to Better Auth
 - [x] Docker compose for PostgreSQL (compose-dev.yaml)
@@ -147,13 +147,19 @@ belong/
 │   │   │   └── routeTree.gen.ts    # Auto-generated route tree
 │   │   ├── index.html
 │   │   └── vite.config.ts
-│   └── backend/                    # Elysia.js + Better Auth
-│       ├── src/
-│       │   ├── index.ts            # Elysia server entry
-│       │   └── lib/
-│       │       └── auth.ts         # Better Auth config
-│       ├── better-auth_migrations/ # Auth table migrations
-│       └── compose-dev.yaml        # PostgreSQL dev container
+  │   └── backend/                    # Elysia.js + Better Auth
+  │       ├── src/
+  │       │   ├── index.ts            # Elysia server entry (runs migrations on startup)
+  │       │   ├── bin/
+  │       │   │   └── migrate.ts      # Standalone migration CLI
+  │       │   └── lib/
+  │       │       ├── auth.ts         # Better Auth config
+  │       │       ├── db.ts           # Shared PostgreSQL pool
+  │       │       └── migrate.ts      # Migration runner
+  │       ├── migrations/
+  │       │   └── 0002_domain_tables.sql  # Domain table definitions
+  │       ├── better-auth_migrations/ # Auth table migrations (auto-managed)
+  │       └── compose-dev.yaml        # PostgreSQL dev container
 ├── packages/
 │   └── ui/                         # Shared shadcn/ui components
 │       ├── src/

@@ -6,7 +6,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "migrate": "bun run src/bin/migrate.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
