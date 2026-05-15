@@ -152,6 +152,111 @@ function findMother(
   return spouseData.gender === "female" ? spouseId : null;
 }
 
+const GEDCOM_MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+function toGedcomDate(dateStr?: string): string | undefined {
+  if (!dateStr) return undefined;
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const d = String(Number(parts[2]));
+    const m = GEDCOM_MONTHS[Number(parts[1]) - 1];
+    return `${d} ${m} ${parts[0]}`;
+  }
+  if (parts.length === 2) {
+    const m = GEDCOM_MONTHS[Number(parts[1]) - 1];
+    return `${m} ${parts[0]}`;
+  }
+  return dateStr;
+}
+
+function toGedcom(nodes: Node<FamilyNodeData>[], edges: Edge[]): string {
+  const lines: string[] = [];
+  lines.push("0 HEAD");
+  lines.push("1 SOUR Belong");
+  lines.push("2 NAME Belong Family Tree");
+  lines.push("1 CHAR UTF-8");
+  lines.push("1 GEDC");
+  lines.push("2 VERS 5.5.1");
+  lines.push("2 FORM LINEAGE-LINKED");
+
+  const idToXref: Record<string, string> = {};
+
+  nodes.forEach((node, i) => {
+    const xref = `I${i + 1}`;
+    idToXref[node.id] = xref;
+    const data = node.data as unknown as FamilyNodeData;
+    const sex = data.gender === "female" ? "F" : data.gender === "male" ? "M" : undefined;
+
+    lines.push(`0 @${xref}@ INDI`);
+    const lastName = data.lastName || "";
+    const firstName = data.firstName || data.label.replace(` ${lastName}`, "");
+    lines.push(`1 NAME ${firstName} /${lastName}/`);
+    if (sex) lines.push(`1 SEX ${sex}`);
+
+    const birthDate = toGedcomDate(data.dateOfBirth);
+    if (birthDate) {
+      lines.push("1 BIRT");
+      lines.push(`2 DATE ${birthDate}`);
+    }
+    const deathDate = toGedcomDate(data.dateOfDeath);
+    if (deathDate) {
+      lines.push("1 DEAT");
+      lines.push(`2 DATE ${deathDate}`);
+    }
+  });
+
+  let familyCount = 0;
+  const visited = new Set<string>();
+
+  const spouseEdges = edges.filter((e) => e.label === "spouse");
+  for (const edge of spouseEdges) {
+    const key = [edge.source, edge.target].sort().join("-");
+    if (visited.has(key)) continue;
+    visited.add(key);
+
+    const husbXref = idToXref[edge.source];
+    const wifeXref = idToXref[edge.target];
+    const husbNode = nodes.find((n) => n.id === edge.source);
+    const husbGender = (husbNode?.data as unknown as FamilyNodeData)?.gender;
+
+    familyCount++;
+    const famXref = `F${familyCount}`;
+    lines.push(`0 @${famXref}@ FAM`);
+
+    if (husbGender === "male") {
+      lines.push(`1 HUSB @${husbXref}@`);
+      lines.push(`1 WIFE @${wifeXref}@`);
+    } else {
+      lines.push(`1 HUSB @${wifeXref}@`);
+      lines.push(`1 WIFE @${husbXref}@`);
+    }
+
+    const children = edges.filter(
+      (e) => e.type === "smoothstep" && (e.source === edge.source || e.source === edge.target),
+    );
+    for (const child of children) {
+      const childXref = idToXref[child.target];
+      if (childXref) lines.push(`1 CHIL @${childXref}@`);
+    }
+  }
+
+  const parentOnly = edges.filter(
+    (e) => e.type === "smoothstep" && !spouseEdges.some((s) => s.source === e.source || s.target === e.source),
+  );
+
+  for (const edge of parentOnly) {
+    const childXref = idToXref[edge.target];
+    if (!childXref) continue;
+    familyCount++;
+    const famXref = `F${familyCount}`;
+    lines.push(`0 @${famXref}@ FAM`);
+    lines.push(`1 CHIL @${childXref}@`);
+  }
+
+  lines.push("0 TRLR");
+  return lines.join("\n");
+}
+
 export type FamilyTreeHandle = { addMember: () => void; exportTree: () => void };
 
 export const FamilyTree = forwardRef<FamilyTreeHandle>(function FamilyTree(_props, ref) {
@@ -214,12 +319,12 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
       });
     },
     exportTree: () => {
-      const data = JSON.stringify({ nodes, edges }, null, 2);
-      const blob = new Blob([data], { type: "application/json" });
+      const gedcom = toGedcom(nodes as Node<FamilyNodeData>[], edges);
+      const blob = new Blob([gedcom], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "family-tree.json";
+      a.download = "family-tree.ged";
       a.click();
       URL.revokeObjectURL(url);
     },
