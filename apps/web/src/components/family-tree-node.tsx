@@ -6,6 +6,7 @@ export type FamilyNodeData = {
   subtitle?: string;
   gender?: "male" | "female";
   generation: number;
+  avatar?: string;
 };
 
 const genderStyles: Record<string, { border: string; bg: string; accent: string; text: string; subtitle: string }> = {
@@ -46,6 +47,9 @@ function FamilyTreeNode({ data }: NodeProps) {
           {nodeData.subtitle && (
             <p className={`text-[11px] ${style.subtitle}`}>{nodeData.subtitle}</p>
           )}
+          <p className={`text-[10px] uppercase tracking-wider ${style.subtitle}`}>
+            {gender === "male" ? "\u2642 Male" : "\u2640 Female"}
+          </p>
         </div>
       </div>
       <Handle
