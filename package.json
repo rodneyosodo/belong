@@ -18,8 +18,8 @@
     "docker:push": "turbo docker:push",
     "docker:build:release": "TAG=$(node -p \"require('./package.json').version\") turbo docker:build",
     "docker:push:release": "TAG=$(node -p \"require('./package.json').version\") turbo docker:push",
-    "docker:up": "docker compose -f docker-compose.yml up -d",
-    "docker:down": "docker compose -f docker-compose.yml down"
+    "docker:up": "docker compose -f docker-compose.yml --env-file .env up -d",
+    "docker:down": "docker compose -f docker-compose.yml --env-file .env down"
   },
   "devDependencies": {
     "oxfmt": "^0.49.0",

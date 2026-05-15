@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
+import { authClient } from "@/lib/auth-client";
 import {
   Sidebar,
   SidebarContent,
@@ -18,42 +19,37 @@ import {
   TreesIcon,
   Share2Icon,
   UploadIcon,
-  Settings2Icon,
+  UserRoundIcon,
 } from "lucide-react";
 
-const data = {
-  user: {
-    name: "James Anderson",
-    email: "james@lineage.app",
-    avatar: "",
+const navMain = [
+  {
+    title: "My Trees",
+    url: "/",
+    icon: <TreesIcon />,
+    isActive: true,
+    items: [
+      { title: "Anderson Family", url: "/tree/1", count: 24 },
+      { title: "Smith Heritage", url: "/tree/2", count: 12 },
+      { title: "Martinez Family", url: "/tree/3", count: 18 },
+      { title: "Johnson Family", url: "/tree/4", count: 8 },
+    ],
   },
-  navMain: [
-    {
-      title: "My Trees",
-      url: "/",
-      icon: <TreesIcon />,
-      isActive: true,
-      items: [
-        { title: "Anderson Family", url: "/tree/1", count: 24 },
-        { title: "Smith Heritage", url: "/tree/2", count: 12 },
-        { title: "Martinez Family", url: "/tree/3", count: 18 },
-        { title: "Johnson Family", url: "/tree/4", count: 8 },
-      ],
-    },
-    {
-      title: "Shared with Me",
-      url: "#",
-      icon: <Share2Icon />,
-      items: [
-        { title: "Williams Lineage", url: "#", count: 15 },
-        { title: "Brown Ancestry", url: "#", count: 7 },
-      ],
-    },
-  ],
-};
+  {
+    title: "Shared with Me",
+    url: "#",
+    icon: <Share2Icon />,
+    items: [
+      { title: "Williams Lineage", url: "#", count: 15 },
+      { title: "Brown Ancestry", url: "#", count: 7 },
+    ],
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -68,7 +64,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           </div>
         </SidebarGroup>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -78,16 +74,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Settings2Icon />
-                <span>Settings</span>
+              <SidebarMenuButton onClick={() => navigate({ to: "/profile" })}>
+                <UserRoundIcon />
+                <span>Profile</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: user?.name ?? "User",
+            email: user?.email ?? "",
+            avatar: user?.image ?? "",
+          }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -6,7 +6,6 @@ import { runMigrations } from "./lib/migrate";
 
 const betterAuthView = (context: Context) => {
   const BETTER_AUTH_ACCEPT_METHODS = ["POST", "GET"];
-  // validate request method
   if (BETTER_AUTH_ACCEPT_METHODS.includes(context.request.method)) {
     return auth.handler(context.request);
   } else {
@@ -30,6 +29,45 @@ const start = async () => {
       }),
     )
     .all("/api/auth/*", betterAuthView)
+    .post("/api/upload/avatar", async (context) => {
+      const formData = await context.request.formData();
+      const file = formData.get("file");
+
+      if (!file || !(file instanceof File)) {
+        context.set.status = 400;
+        return { error: "No file provided" };
+      }
+
+      if (!file.type.startsWith("image/")) {
+        context.set.status = 400;
+        return { error: "File must be an image" };
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        context.set.status = 400;
+        return { error: "File must be under 5MB" };
+      }
+
+      const buffer = await file.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+      const dataUrl = `data:${file.type};base64,${base64}`;
+
+      const session = await auth.api.getSession({
+        headers: context.request.headers,
+      });
+
+      if (!session?.user?.id) {
+        context.set.status = 401;
+        return { error: "Unauthorized" };
+      }
+
+      await auth.api.updateUser({
+        body: { image: dataUrl },
+        headers: context.request.headers,
+      });
+
+      return { success: true };
+    })
     .get("/", () => "Hello Elysia")
     .listen(5090);
 

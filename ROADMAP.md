@@ -2,16 +2,16 @@
 
 ## Tech Stack
 
-| Layer              | Technology                                        |
-| ------------------ | ------------------------------------------------- |
-| Monorepo           | Turborepo + bun                                   |
-| Frontend           | Vite + React 19 + TanStack Router + Tailwind v4   |
-| UI                 | shadcn/ui (base-nova), Base UI, Lucide            |
-| Tree Visualization | React Flow (xyflow) + Dagre                       |
-| Backend            | Elysia.js (Bun HTTP framework)                    |
-| Auth               | Better Auth (email/password, Google OAuth)        |
-| Database           | PostgreSQL via `pg` (node-postgres)               |
-| Deployment         | Docker (self-hosted)                               |
+| Layer              | Technology                                      |
+| ------------------ | ----------------------------------------------- |
+| Monorepo           | Turborepo + bun                                 |
+| Frontend           | Vite + React 19 + TanStack Router + Tailwind v4 |
+| UI                 | shadcn/ui (base-nova), Base UI, Lucide          |
+| Tree Visualization | React Flow (xyflow) + Dagre                     |
+| Backend            | Elysia.js (Bun HTTP framework)                  |
+| Auth               | Better Auth (email/password, Google OAuth)      |
+| Database           | PostgreSQL via `pg` (node-postgres)             |
+| Deployment         | Docker (self-hosted)                            |
 
 ## Phase 1: Project Setup & Foundation
 
@@ -34,7 +34,6 @@
 
 - [x] Auth pages: Sign in, Sign up
 - [ ] Forgot password flow
-- [ ] Email verification
 - [x] Better Auth client setup with session management
 - [ ] Auth middleware — protect routes, redirect unauthenticated users
 - [ ] User profile page — edit name, avatar, change password
