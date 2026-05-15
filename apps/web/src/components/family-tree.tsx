@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Background,
@@ -100,9 +100,23 @@ function getLayoutedElements(nodes: Node<FamilyNodeData>[], edges: Edge[], direc
   return { nodes: newNodes, edges };
 }
 
-const layouted = getLayoutedElements(initialNodes, initialEdges);
+function loadData() {
+  const savedNodes = localStorage.getItem("family-tree-nodes");
+  const savedEdges = localStorage.getItem("family-tree-edges");
+  if (savedNodes && savedEdges) {
+    try {
+      const nodes = JSON.parse(savedNodes) as Node<FamilyNodeData>[];
+      const edges = JSON.parse(savedEdges) as Edge[];
+      return { nodes, edges };
+    } catch {}
+  }
+  return { nodes: initialNodes, edges: initialEdges };
+}
 
-let nextId = 14;
+const { nodes: initialLoadNodes, edges: initialLoadEdges } = loadData();
+const layouted = getLayoutedElements(initialLoadNodes, initialLoadEdges);
+
+let nextId = Math.max(0, ...initialLoadNodes.map((n) => Number(n.id))) + 1;
 function generateId() {
   return String(nextId++);
 }
@@ -180,6 +194,11 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
     const generations = new Set(nodes.map((n) => (n.data as unknown as FamilyNodeData).generation)).size;
     return { memberCount, living, generations };
   }, [nodes]);
+
+  useEffect(() => {
+    localStorage.setItem("family-tree-nodes", JSON.stringify(nodes));
+    localStorage.setItem("family-tree-edges", JSON.stringify(edges));
+  }, [nodes, edges]);
 
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 

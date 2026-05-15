@@ -1,6 +1,5 @@
-"use client";
-
 import * as React from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -54,6 +53,8 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const navigate = useNavigate();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarContent>
@@ -71,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>
+              <SidebarMenuButton onClick={() => navigate({ to: "/import" })}>
                 <UploadIcon />
                 <span>Import GEDCOM</span>
               </SidebarMenuButton>

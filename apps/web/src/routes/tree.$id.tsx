@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useRef } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { FamilyTree, type FamilyTreeHandle } from "@/components/family-tree"
@@ -70,6 +70,12 @@ function TreePage() {
             >
               Share
             </button>
+            <Link
+              to="/import"
+              className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+            >
+              Import
+            </Link>
           </div>
         </header>
         <div className="flex-1">
