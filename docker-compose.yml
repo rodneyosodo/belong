@@ -61,5 +61,9 @@ services:
       - belong-network
     ports:
       - 5091:5091
+    environment:
+      BELONG_BACKEND_URL: ${BELONG_BACKEND_URL:-http://localhost:5090}
+      BELONG_GOOGLE_CLIENT_ID: ${BELONG_GOOGLE_CLIENT_ID:-}
+      BELONG_GITHUB_CLIENT_ID: ${BELONG_GITHUB_CLIENT_ID:-}
     depends_on:
       - backend

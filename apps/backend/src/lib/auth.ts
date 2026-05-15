@@ -6,17 +6,33 @@ import nodemailer from "nodemailer";
 
 import { pool } from "./db";
 
-const transporter = nodemailer.createTransport({
-  host: Bun.env.BELONG_SMTP_HOST as string,
-  port: parseInt(Bun.env.BELONG_SMTP_PORT as string) || 465,
-  secure: (Bun.env.BELONG_SMTP_PORT as string) === "465" || true,
-  auth: {
-    user: Bun.env.BELONG_SMTP_USER as string,
-    pass: Bun.env.BELONG_SMTP_PASS as string,
-  },
-});
+const smtpHost = Bun.env.BELONG_SMTP_HOST as string;
+const smtpUser = Bun.env.BELONG_SMTP_USER as string;
+const smtpPass = Bun.env.BELONG_SMTP_PASS as string;
+const hasSmtpConfig = !!(smtpHost && smtpUser && smtpPass);
 
-const FROM_ADDRESS = Bun.env.BELONG_SMTP_FROM as string;
+const transporter = hasSmtpConfig
+  ? nodemailer.createTransport({
+      host: smtpHost,
+      port: parseInt(Bun.env.BELONG_SMTP_PORT as string) || 465,
+      secure: (Bun.env.BELONG_SMTP_PORT as string) === "465" || true,
+      auth: { user: smtpUser, pass: smtpPass },
+    })
+  : null;
+
+const socialProviders: Record<string, { clientId: string; clientSecret: string }> = {};
+
+const googleId = Bun.env.BELONG_GOOGLE_CLIENT_ID as string;
+const googleSecret = Bun.env.BELONG_GOOGLE_CLIENT_SECRET as string;
+if (googleId && googleSecret) {
+  socialProviders.google = { clientId: googleId, clientSecret: googleSecret };
+}
+
+const githubId = Bun.env.BELONG_GITHUB_CLIENT_ID as string;
+const githubSecret = Bun.env.BELONG_GITHUB_CLIENT_SECRET as string;
+if (githubId && githubSecret) {
+  socialProviders.github = { clientId: githubId, clientSecret: githubSecret };
+}
 
 export const auth = betterAuth({
   baseURL: (Bun.env.BETTER_AUTH_URL as string) || "http://localhost:5090",
@@ -26,10 +42,17 @@ export const auth = betterAuth({
   database: pool,
   emailAndPassword: {
     enabled: true,
-    sendResetPassword: async ({ user, url, token }) => {
+    sendResetPassword: async ({ user, url }) => {
+      if (!transporter) {
+        console.log("SMTP not configured. Password reset requested for:", {
+          email: user.email,
+          url,
+        });
+        return;
+      }
       try {
         await transporter.sendMail({
-          from: FROM_ADDRESS,
+          from: Bun.env.BELONG_SMTP_FROM as string,
           to: user.email,
           subject: "Reset your Belong password",
           text: `Reset your password here: ${url}`,
@@ -58,14 +81,5 @@ export const auth = betterAuth({
     },
   },
   plugins: [username(), anonymous(), bearer()],
-  socialProviders: {
-    google: {
-      clientId: Bun.env.BELONG_GOOGLE_CLIENT_ID as string,
-      clientSecret: Bun.env.BELONG_GOOGLE_CLIENT_SECRET as string,
-    },
-    github: {
-      clientId: Bun.env.BELONG_GITHUB_CLIENT_ID as string,
-      clientSecret: Bun.env.BELONG_GITHUB_CLIENT_SECRET as string,
-    },
-  },
+  socialProviders: Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
 });

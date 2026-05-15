@@ -20,6 +20,9 @@ ARG REVISION
 ARG CREATED
 
 COPY --from=build /app/apps/web/dist /usr/share/nginx/html
+COPY apps/web/env.js.template /usr/share/nginx/html/env.js.template
+COPY apps/web/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 LABEL org.opencontainers.image.source=https://github.com/rodneyosodo/belong
 LABEL org.opencontainers.image.version=${VERSION}
@@ -51,4 +54,4 @@ EOF
 
 EXPOSE 5091
 
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/entrypoint.sh"]
