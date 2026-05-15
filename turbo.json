@@ -15,6 +15,13 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "docker:build": {
+      "cache": false
+    },
+    "docker:push": {
+      "cache": false,
+      "dependsOn": ["docker:build"]
     }
   }
 }

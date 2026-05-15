@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "lint": "oxlint --ignore-pattern src/routeTree.gen.ts",
-    "format": "oxfmt 'src/**' '!src/routeTree.gen.ts'"
+    "format": "oxfmt 'src/**' '!src/routeTree.gen.ts'",
+    "docker:build": "docker build -t ghcr.io/rodneyosodo/belong-web:latest -f Dockerfile ../..",
+    "docker:push": "docker push ghcr.io/rodneyosodo/belong-web:latest"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",

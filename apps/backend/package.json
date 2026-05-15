@@ -7,7 +7,9 @@
     "dev": "bun run --watch src/index.ts",
     "lint": "oxlint",
     "format": "oxfmt",
-    "migrate": "bun run src/bin/migrate.ts"
+    "migrate": "bun run src/bin/migrate.ts",
+    "docker:build": "docker build -t ghcr.io/rodneyosodo/belong-backend:latest -f Dockerfile ../..",
+    "docker:push": "docker push ghcr.io/rodneyosodo/belong-backend:latest"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",

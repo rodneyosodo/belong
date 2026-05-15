@@ -3,12 +3,31 @@ import { join } from 'path';
 
 import { pool } from './db';
 
-const migrationsDir = join(import.meta.dir, '../../migrations');
+const migrationDirs = [
+  join(import.meta.dir, '../../better-auth_migrations'),
+  join(import.meta.dir, '../../migrations'),
+];
+
 const completedTable = 'migrations';
 
-const migrations = readdirSync(migrationsDir)
-  .filter((f) => f.endsWith('.sql'))
-  .sort();
+function loadMigrations() {
+  const files: { name: string; dir: string }[] = [];
+
+  for (const dir of migrationDirs) {
+    for (const f of readdirSync(dir)) {
+      if (f.endsWith('.sql')) {
+        files.push({ name: f, dir });
+      }
+    }
+  }
+
+  files.sort((a, b) => {
+    const dirOrder = migrationDirs.indexOf(a.dir) - migrationDirs.indexOf(b.dir);
+    if (dirOrder !== 0) return dirOrder;
+    return a.name.localeCompare(b.name);
+  });
+  return files;
+}
 
 export async function runMigrations() {
   await pool.query(
@@ -20,24 +39,24 @@ export async function runMigrations() {
   );
   const completedNames = new Set(completed.map((r: { name: string }) => r.name));
 
-  for (const file of migrations) {
-    if (completedNames.has(file)) {
+  const migrations = loadMigrations();
+
+  for (const { name, dir } of migrations) {
+    if (completedNames.has(name)) {
       continue;
     }
 
-    const sql = readFileSync(join(migrationsDir, file), 'utf-8');
-
-    await pool.query('begin');
+    const sql = readFileSync(join(dir, name), 'utf-8');
 
     try {
+      await pool.query('begin');
       await pool.query(sql);
-      await pool.query(`insert into "${completedTable}" ("name") values ($1)`, [file]);
+      await pool.query(`insert into "${completedTable}" ("name") values ($1)`, [name]);
       await pool.query('commit');
-      console.log(`  ✓ ${file}`);
+      console.log(`  ✓ ${name}`);
     } catch (err) {
-      await pool.query('rollback');
-      console.error(`  ✗ ${file}:`, err);
-      throw err;
+      await pool.query('rollback').catch(() => {});
+      console.error(`  ✗ ${name}:`, err);
     }
   }
 }

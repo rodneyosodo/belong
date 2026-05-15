@@ -13,7 +13,11 @@
     "lint:fix": "oxlint --fix",
     "format": "turbo format",
     "format:check": "oxfmt --check 'apps/*/src/**' 'packages/*/src/**' '!apps/web/src/routeTree.gen.ts'",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "docker:build": "turbo docker:build",
+    "docker:push": "turbo docker:push",
+    "docker:up": "docker compose -f docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker-compose.yml down"
   },
   "devDependencies": {
     "oxfmt": "^0.49.0",

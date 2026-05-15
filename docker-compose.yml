@@ -1,0 +1,60 @@
+name: belong
+
+networks:
+  belong-network:
+
+volumes:
+  belong-postgres-volume:
+
+services:
+  db:
+    image: docker.io/postgres:18.3-alpine3.23
+    container_name: belong-db
+    restart: on-failure
+    networks:
+      - belong-network
+    volumes:
+      - belong-postgres-volume:/var/lib/postgresql
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: belong
+      POSTGRES_PASSWORD: belong
+      POSTGRES_DB: belong
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U belong"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ghcr.io/rodneyosodo/belong-backend:latest
+    container_name: belong-backend
+    restart: on-failure
+    networks:
+      - belong-network
+    ports:
+      - 5090:5090
+    environment:
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-secret-change-in-production}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:5090}
+      BELONG_DB_URI: postgresql://belong:belong@db:5432/belong
+      BELONG_GOOGLE_CLIENT_ID: ${BELONG_GOOGLE_CLIENT_ID:-}
+      BELONG_GOOGLE_CLIENT_SECRET: ${BELONG_GOOGLE_CLIENT_SECRET:-}
+      BELONG_GITHUB_CLIENT_ID: ${BELONG_GITHUB_CLIENT_ID:-}
+      BELONG_GITHUB_CLIENT_SECRET: ${BELONG_GITHUB_CLIENT_SECRET:-}
+      BELONG_FRONTEND_URL: ${BELONG_FRONTEND_URL:-http://localhost:5091}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: ghcr.io/rodneyosodo/belong-web:latest
+    container_name: belong-web
+    restart: on-failure
+    networks:
+      - belong-network
+    ports:
+      - 5091:5091
+    depends_on:
+      - backend

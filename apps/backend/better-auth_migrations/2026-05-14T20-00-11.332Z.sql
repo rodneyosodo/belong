@@ -1,3 +1,3 @@
-alter table "user" add column "username" text unique;
+alter table "user" add column if not exists "username" text unique;
 
-alter table "user" add column "displayUsername" text;
+alter table "user" add column if not exists "displayUsername" text;

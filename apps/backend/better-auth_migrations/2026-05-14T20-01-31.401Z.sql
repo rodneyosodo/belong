@@ -1,1 +1,1 @@
-alter table "user" add column "isAnonymous" boolean;
+alter table "user" add column if not exists "isAnonymous" boolean;

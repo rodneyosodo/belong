@@ -1,0 +1,15 @@
+node_modules
+.turbo
+dist
+.env
+.git
+.gitignore
+*.md
+node_modules/
+.turbo/
+dist/
+.env
+.git/
+**/node_modules/
+**/.turbo/
+**/dist/

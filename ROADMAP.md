@@ -26,8 +26,9 @@
   - `relationships` — id, tree_id, person_a_id, person_b_id, type (parent/child/spouse/sibling/adopted/step-parent/step-child), metadata (JSONB)
 - [x] Better Auth with email/password + Google + GitHub OAuth (backend + client)
 - [x] Docker compose for PostgreSQL (compose-dev.yaml)
-- [ ] Create Dockerfile for backend + web production builds
-- [ ] Create docker-compose.yml for full-stack deployment
+- [x] Dockerfile for backend (apps/backend/Dockerfile)
+- [x] Dockerfile for web (apps/web/Dockerfile)
+- [x] docker-compose.yml for full-stack deployment
 
 ## Phase 2: Authentication & User Management
 
@@ -125,9 +126,9 @@
 
 ## Phase 11: Docker & Deployment
 
-- [ ] Dockerfile for backend (Elysia/Bun)
-- [ ] Dockerfile for web (Vite static build + nginx)
-- [ ] docker-compose.yml — backend + web + PostgreSQL
+- [x] Dockerfile for backend (Elysia/Bun)
+- [x] Dockerfile for web (Vite static build + nginx)
+- [x] docker-compose.yml — backend + web + PostgreSQL
 - [ ] Environment variables — documented `.env.example`
 - [ ] README — setup instructions for Docker deployment
 
@@ -168,6 +169,7 @@ belong/
 │       │   └── styles/
 │       │       └── globals.css     # Tailwind v4 global styles + CSS vars
 │       └── components.json
+├── docker-compose.yml              # Full-stack orchestration
 ├── package.json                    # Turborepo root
 ├── turbo.json
 └── tsconfig.json
