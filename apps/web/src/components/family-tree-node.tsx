@@ -30,18 +30,36 @@ function FamilyTreeNode({ data }: NodeProps) {
   const nodeData = data as unknown as FamilyNodeData;
   const gender = nodeData.gender ?? "male";
   const style = genderStyles[gender];
+  const initials = nodeData.label
+    .split(" ")
+    .map((w: string) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div
-      className={`rounded-xl border-2 ${style.border} ${style.bg} px-4 py-2.5 shadow-sm min-w-[140px]`}
+      className={`rounded-xl border-2 ${style.border} ${style.bg} px-4 py-2.5 shadow-sm min-w-[160px]`}
     >
       <Handle type="target" position={Position.Top} id="top" className="!bg-[#7D6B3D]" />
       <Handle type="target" position={Position.Left} id="left" className="!bg-transparent !border-0" />
       <Handle type="source" position={Position.Right} id="right" className="!bg-transparent !border-0" />
-      <div className="flex items-center gap-2">
-        <div className={`size-2 rounded-full ${style.accent}`} />
-        <div>
-          <p className={`text-sm font-semibold leading-tight ${style.text}`}>
+      <div className="flex items-center gap-3">
+        {nodeData.avatar ? (
+          <img
+            src={nodeData.avatar}
+            alt=""
+            className="size-9 rounded-full object-cover border border-[#D6D0BE] shrink-0"
+          />
+        ) : (
+          <div
+            className={`size-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${style.accent} text-white`}
+          >
+            {initials}
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className={`text-sm font-semibold leading-tight truncate ${style.text}`}>
             {nodeData.label}
           </p>
           {nodeData.subtitle && (

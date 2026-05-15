@@ -238,7 +238,7 @@ export function FamilyTree() {
   );
 
   const handleDialogConfirm = useCallback(
-    (data: { name: string; gender: "male" | "female" }) => {
+    (data: { name: string; gender: "male" | "female"; avatar?: string }) => {
       if (!dialogState.open) return;
 
       const { action, targetId, targetData } = dialogState;
@@ -265,6 +265,7 @@ export function FamilyTree() {
           label: data.name,
           gender: data.gender,
           generation: newGeneration,
+          avatar: data.avatar,
         },
       };
 

@@ -18,7 +18,7 @@ interface AddPersonDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   action: ContextMenuAction
-  onConfirm: (data: { name: string; gender: "male" | "female" }) => void
+  onConfirm: (data: { name: string; gender: "male" | "female"; avatar?: string }) => void
 }
 
 const actionMeta: Record<ContextMenuAction, { icon: typeof HeartIcon; title: string; description: string }> = {
@@ -57,11 +57,13 @@ export function AddPersonDialog({
 }: AddPersonDialogProps) {
   const [name, setName] = useState("");
   const [gender, setGender] = useState<"male" | "female">("male");
+  const [avatar, setAvatar] = useState("");
 
   useEffect(() => {
     if (open) {
       setName("");
       setGender("male");
+      setAvatar("");
     }
   }, [open]);
 
@@ -70,9 +72,10 @@ export function AddPersonDialog({
 
   const handleConfirm = () => {
     if (!name.trim()) return;
-    onConfirm({ name: name.trim(), gender });
+    onConfirm({ name: name.trim(), gender, avatar: avatar.trim() || undefined });
     setName("");
     setGender("male");
+    setAvatar("");
   };
 
   return (
@@ -132,6 +135,16 @@ export function AddPersonDialog({
                 Female
               </button>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[13px] font-medium text-[#2D2926]">Avatar URL</Label>
+            <Input
+              placeholder="https://example.com/photo.jpg"
+              value={avatar}
+              onChange={(e) => setAvatar(e.target.value)}
+              className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
+            />
           </div>
         </div>
 
