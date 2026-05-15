@@ -35,10 +35,10 @@ const data = {
       icon: <TreesIcon />,
       isActive: true,
       items: [
-        { title: "Anderson Family", url: "#", count: 24 },
-        { title: "Smith Heritage", url: "#", count: 12 },
-        { title: "Martinez Family", url: "#", count: 18 },
-        { title: "Johnson Family", url: "#", count: 8 },
+        { title: "Anderson Family", url: "/tree/1", count: 24 },
+        { title: "Smith Heritage", url: "/tree/2", count: 12 },
+        { title: "Martinez Family", url: "/tree/3", count: 18 },
+        { title: "Johnson Family", url: "/tree/4", count: 8 },
       ],
     },
     {

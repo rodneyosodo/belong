@@ -1,0 +1,386 @@
+import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  Background,
+  ReactFlow,
+  addEdge,
+  ConnectionLineType,
+  Panel,
+  Position,
+  useNodesState,
+  useEdgesState,
+  type Connection,
+  type Node,
+  type Edge,
+  type NodeTypes,
+  type NodeMouseHandler,
+} from "@xyflow/react";
+import dagre from "@dagrejs/dagre";
+
+import "@xyflow/react/dist/style.css";
+
+import FamilyTreeNode from "./family-tree-node";
+import type { FamilyNodeData } from "./family-tree-node";
+import { initialNodes, initialEdges } from "./family-tree-data";
+import { NodeContextMenu, type ContextMenuAction } from "./node-context-menu";
+import { AddPersonDialog } from "./add-person-dialog";
+
+const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+
+const nodeWidth = 172;
+const nodeHeight = 64;
+
+const nodeTypes: NodeTypes = {
+  family: FamilyTreeNode,
+};
+
+function getLayoutedElements(nodes: Node<FamilyNodeData>[], edges: Edge[], direction = "TB") {
+  const isHorizontal = direction === "LR";
+
+  const spouseEdges = edges.filter((e) => e.label === "spouse");
+
+  dagreGraph.setGraph({ rankdir: direction });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const newNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    return {
+      ...node,
+      targetPosition: isHorizontal ? Position.Left : Position.Top,
+      sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
+      position: {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2,
+      },
+    };
+  });
+
+  const nodeMap = new Map(newNodes.map((n) => [n.id, n]));
+  const gap = 24;
+
+  spouseEdges.forEach((edge) => {
+    const a = nodeMap.get(edge.source);
+    const b = nodeMap.get(edge.target);
+    if (!a || !b) return;
+
+    if (isHorizontal) {
+      const midY = (a.position.y + b.position.y + nodeHeight) / 2;
+      a.position.y = midY - nodeHeight;
+      b.position.y = midY;
+    } else {
+      const aCenterY = a.position.y + nodeHeight / 2;
+      const bCenterY = b.position.y + nodeHeight / 2;
+      const avgY = (aCenterY + bCenterY) / 2;
+      a.position.y = avgY - nodeHeight / 2;
+      b.position.y = avgY - nodeHeight / 2;
+
+      const aCenterX = a.position.x + nodeWidth / 2;
+      const bCenterX = b.position.x + nodeWidth / 2;
+      const dist = Math.abs(aCenterX - bCenterX);
+      if (dist < nodeWidth + gap) {
+        const midX = (aCenterX + bCenterX) / 2;
+        a.position.x = midX - nodeWidth / 2 - gap / 2;
+        b.position.x = midX + gap / 2;
+      }
+    }
+  });
+
+  return { nodes: newNodes, edges };
+}
+
+const layouted = getLayoutedElements(initialNodes, initialEdges);
+
+let nextId = 14;
+function generateId() {
+  return String(nextId++);
+}
+
+function findParents(nodeId: string, allEdges: Edge[]): string[] {
+  return allEdges
+    .filter((e) => e.target === nodeId && !e.label)
+    .map((e) => e.source);
+}
+
+function findSpouse(nodeId: string, allEdges: Edge[]): string | null {
+  const spouseEdge = allEdges.find(
+    (e) => e.label === "spouse" && (e.source === nodeId || e.target === nodeId),
+  );
+  if (!spouseEdge) return null;
+  return spouseEdge.source === nodeId ? spouseEdge.target : spouseEdge.source;
+}
+
+function findMother(
+  targetId: string,
+  allNodes: Node<FamilyNodeData>[],
+  allEdges: Edge[],
+): string | null {
+  const target = allNodes.find((n) => n.id === targetId);
+  if (!target) return null;
+  const data = target.data as unknown as FamilyNodeData;
+  if (data.gender === "female") return targetId;
+  const spouseId = findSpouse(targetId, allEdges);
+  if (!spouseId) return null;
+  const spouse = allNodes.find((n) => n.id === spouseId);
+  if (!spouse) return null;
+  const spouseData = spouse.data as unknown as FamilyNodeData;
+  return spouseData.gender === "female" ? spouseId : null;
+}
+
+export function FamilyTree() {
+  const [nodes, setNodes, onNodesChange] = useNodesState(layouted.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layouted.edges);
+
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    nodeId: string;
+    nodeData: FamilyNodeData;
+  } | null>(null);
+
+  const [dialogState, setDialogState] = useState<{
+    open: boolean;
+    action: ContextMenuAction;
+    targetId: string;
+    targetData: FamilyNodeData;
+  }>({
+    open: false,
+    action: "spouse",
+    targetId: "",
+    targetData: { label: "", generation: 0 },
+  });
+
+  const layoutDirectionRef = useRef("TB");
+
+  const relayout = useCallback(
+    (newNodes: Node<FamilyNodeData>[], newEdges: Edge[], direction?: string) => {
+      const dir = direction ?? layoutDirectionRef.current;
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+        newNodes,
+        newEdges,
+        dir,
+      );
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+    },
+    [setNodes, setEdges],
+  );
+
+  const onConnect = useCallback(
+    (params: Connection) => {
+      setEdges((eds) =>
+        addEdge({ ...params, type: ConnectionLineType.SmoothStep, animated: true }, eds),
+      );
+    },
+    [setEdges],
+  );
+
+  const onNodeContextMenu = useCallback<NodeMouseHandler>(
+    (event, node) => {
+      event.preventDefault();
+      const nodeData = node.data as unknown as FamilyNodeData;
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        nodeId: node.id,
+        nodeData,
+      });
+    },
+    [],
+  );
+
+  const onLayout = useCallback(
+    (direction: string) => {
+      layoutDirectionRef.current = direction;
+      relayout(nodes as Node<FamilyNodeData>[], edges);
+    },
+    [nodes, edges, relayout],
+  );
+
+  const handleContextMenuAction = useCallback(
+    (action: ContextMenuAction) => {
+      if (!contextMenu) return;
+      if (action === "delete") {
+        const newNodes = nodes.filter((n) => n.id !== contextMenu.nodeId);
+        const newEdges = edges.filter(
+          (e) =>
+            e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId,
+        );
+        relayout(newNodes, newEdges);
+        return;
+      }
+      setDialogState({
+        open: true,
+        action,
+        targetId: contextMenu.nodeId,
+        targetData: contextMenu.nodeData,
+      });
+    },
+    [contextMenu, nodes, edges, relayout],
+  );
+
+  const handleDialogConfirm = useCallback(
+    (data: { name: string; gender: "male" | "female" }) => {
+      if (!dialogState.open) return;
+
+      const { action, targetId, targetData } = dialogState;
+      const newId = generateId();
+      let newGeneration = targetData.generation;
+
+      switch (action) {
+        case "spouse":
+        case "sibling":
+          break;
+        case "child":
+          newGeneration = targetData.generation + 1;
+          break;
+        case "parent":
+          newGeneration = targetData.generation - 1;
+          break;
+      }
+
+      const newNode: Node<FamilyNodeData> = {
+        id: newId,
+        type: "family",
+        position: { x: 0, y: 0 },
+        data: {
+          label: data.name,
+          gender: data.gender,
+          generation: newGeneration,
+        },
+      };
+
+      const newEdges: Edge[] = [];
+
+      switch (action) {
+        case "spouse": {
+          newEdges.push({
+            id: `e${targetId}-${newId}`,
+            source: targetId,
+            target: newId,
+            sourceHandle: "right",
+            targetHandle: "left",
+            type: "straight",
+            style: { stroke: "#7D6B3D" },
+            label: "spouse",
+          });
+          break;
+        }
+        case "child": {
+          const motherId = findMother(targetId, nodes, edges) ?? targetId;
+          newEdges.push({
+            id: `e${motherId}-${newId}`,
+            source: motherId,
+            target: newId,
+            sourceHandle: "bottom",
+            targetHandle: "top",
+            type: "smoothstep",
+            style: { stroke: "#8C8782", strokeWidth: 1.5 },
+          });
+          break;
+        }
+        case "parent": {
+          newEdges.push({
+            id: `e${newId}-${targetId}`,
+            source: newId,
+            target: targetId,
+            sourceHandle: "bottom",
+            targetHandle: "top",
+            type: "smoothstep",
+            style: { stroke: "#8C8782", strokeWidth: 1.5 },
+          });
+          break;
+        }
+        case "sibling": {
+          const parents = findParents(targetId, edges);
+          parents.forEach((parentId) => {
+            newEdges.push({
+              id: `e${parentId}-${newId}`,
+              source: parentId,
+              target: newId,
+              sourceHandle: "bottom",
+              targetHandle: "top",
+              type: "smoothstep",
+              style: { stroke: "#8C8782", strokeWidth: 1.5 },
+            });
+          });
+          break;
+        }
+      }
+
+      const allNodes = [...nodes, newNode];
+      const allEdges = [...edges, ...newEdges];
+      setDialogState((prev) => ({ ...prev, open: false }));
+      relayout(allNodes, allEdges);
+    },
+    [dialogState, nodes, edges, relayout],
+  );
+
+  const defaultEdgeOptions = useMemo(
+    () => ({
+      type: ConnectionLineType.SmoothStep,
+      style: { stroke: "#8C8782", strokeWidth: 1.5 },
+    }),
+    [],
+  );
+
+  return (
+    <>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeContextMenu={onNodeContextMenu}
+        connectionLineType={ConnectionLineType.SmoothStep}
+        nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        fitView
+        colorMode="light"
+      >
+        <Panel position="top-right" className="flex gap-2">
+          <button
+            onClick={() => onLayout("TB")}
+            className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+          >
+            Vertical
+          </button>
+          <button
+            onClick={() => onLayout("LR")}
+            className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+          >
+            Horizontal
+          </button>
+        </Panel>
+        <Background gap={20} size={1} color="#D6D0BE" />
+      </ReactFlow>
+
+      {contextMenu && (
+        <NodeContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          label={contextMenu.nodeData.label}
+          onAction={handleContextMenuAction}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      <AddPersonDialog
+        open={dialogState.open}
+        onOpenChange={(open) =>
+          setDialogState((prev) => ({ ...prev, open }))
+        }
+        action={dialogState.action}
+        onConfirm={handleDialogConfirm}
+      />
+    </>
+  );
+}

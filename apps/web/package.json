@@ -12,6 +12,7 @@
     "format": "oxfmt 'src/**' '!src/routeTree.gen.ts'"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
     "@tanstack/react-router": "^1.169.2",
     "@tanstack/react-router-devtools": "^1.166.13",
     "@workspace/ui": "workspace:*",
