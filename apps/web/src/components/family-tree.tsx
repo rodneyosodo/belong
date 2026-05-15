@@ -3,12 +3,14 @@ import {
   Background,
   MiniMap,
   ReactFlow,
+  ReactFlowProvider,
   addEdge,
   ConnectionLineType,
   Panel,
   Position,
   useNodesState,
   useEdgesState,
+  useReactFlow,
   type Connection,
   type Node,
   type Edge,
@@ -136,6 +138,14 @@ function findMother(
 }
 
 export function FamilyTree() {
+  return (
+    <ReactFlowProvider>
+      <FamilyTreeInner />
+    </ReactFlowProvider>
+  );
+}
+
+function FamilyTreeInner() {
   const [nodes, setNodes, onNodesChange] = useNodesState(layouted.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layouted.edges);
 
@@ -167,6 +177,8 @@ export function FamilyTree() {
     const generations = new Set(nodes.map((n) => (n.data as unknown as FamilyNodeData).generation)).size;
     return { memberCount, living, generations };
   }, [nodes]);
+
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
 
   const layoutDirectionRef = useRef("TB");
 
@@ -359,6 +371,28 @@ export function FamilyTree() {
         colorMode="light"
       >
         <Panel position="top-right" className="flex gap-2">
+          <button
+            onClick={() => zoomIn()}
+            className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-2.5 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+            title="Zoom in"
+          >
+            +
+          </button>
+          <button
+            onClick={() => zoomOut()}
+            className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-2.5 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+            title="Zoom out"
+          >
+            -
+          </button>
+          <button
+            onClick={() => fitView({ padding: 0.2 })}
+            className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-2.5 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
+            title="Fit view"
+          >
+            Fit
+          </button>
+          <div className="w-px bg-[#D6D0BE]" />
           <button
             onClick={() => onLayout("TB")}
             className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
