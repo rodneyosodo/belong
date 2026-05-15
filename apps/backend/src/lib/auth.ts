@@ -11,6 +11,13 @@ export const auth = betterAuth({
   database: pool,
   emailAndPassword: {
     enabled: true,
+    sendResetPassword: async ({ user, url, token }) => {
+      console.log('\n=== PASSWORD RESET ===');
+      console.log(`User: ${user.email}`);
+      console.log(`Reset URL: ${url}`);
+      console.log(`Token: ${token}`);
+      console.log('======================\n');
+    },
   },
   plugins: [username(), anonymous(), bearer()],
   socialProviders: {
