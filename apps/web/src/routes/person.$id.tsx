@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
+import { createFileRoute, Link, useParams } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
 import { ArrowLeft } from "lucide-react"
 import {
   Card,
@@ -6,8 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card"
-import { initialNodes, initialEdges } from "@/components/family-tree-data"
 import type { FamilyNodeData } from "@/components/family-tree-node"
+import { personApi, relationshipApi, type Person, type Relationship } from "@/lib/api"
 
 export const Route = createFileRoute("/person/$id")({
   component: PersonPage,
@@ -23,61 +24,104 @@ function computeAge(dob?: string, dod?: string): string {
   return String(age);
 }
 
+function personLabel(p: Person): string {
+  return `${p.first_name} ${p.last_name}`.trim();
+}
+
 function PersonPage() {
   const { id } = Route.useParams();
-  const node = initialNodes.find((n) => n.id === id);
-  if (!node) return <div className="p-8 text-[#8C8782]">Person not found</div>;
-  const data = node.data as unknown as FamilyNodeData;
+  const [person, setPerson] = useState<Person | null>(null);
+  const [relations, setRelations] = useState<{ rel: string; name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const spouse = initialEdges
-    .filter((e) => e.label === "spouse" && (e.source === id || e.target === id))
-    .map((e) => {
-      const otherId = e.source === id ? e.target : e.source;
-      return initialNodes.find((n) => n.id === otherId);
-    })
-    .filter(Boolean);
+  useEffect(() => {
+    (async () => {
+      try {
+        const allPersons = await personApi.list(id);
+        const p = allPersons.find((x) => x.id === id);
+        if (!p) {
+          setLoading(false);
+          return;
+        }
+        setPerson(p);
 
-  const parents = initialEdges
-    .filter((e) => e.target === id && e.type === "smoothstep")
-    .map((e) => initialNodes.find((n) => n.id === e.source))
-    .filter(Boolean);
+        const treeId = p.tree_id;
+        const [allRels, allPersonsForTree] = await Promise.all([
+          relationshipApi.list(treeId),
+          Promise.resolve(allPersons),
+        ]);
 
-  const children = initialEdges
-    .filter((e) => e.source === id && e.type === "smoothstep")
-    .map((e) => initialNodes.find((n) => n.id === e.target))
-    .filter(Boolean);
+        const personMap = new Map(allPersonsForTree.map((x) => [x.id, x]));
+        const relList: { rel: string; name: string }[] = [];
 
-  const siblings = initialEdges
-    .filter((e) => e.type === "smoothstep" && e.target === id)
-    .flatMap((e) =>
-      initialEdges
-        .filter((pe) => pe.source === e.source && pe.target !== id && pe.type === "smoothstep")
-        .map((se) => initialNodes.find((n) => n.id === se.target)),
-    )
-    .filter(Boolean);
+        for (const r of allRels) {
+          if (r.person_a_id === id || r.person_b_id === id) {
+            const otherId = r.person_a_id === id ? r.person_b_id : r.person_a_id;
+            const other = personMap.get(otherId);
+            if (!other) continue;
 
-  const relations = [
-    ...spouse.map((n) => ({ rel: "Spouse", name: n!.data.label })),
-    ...parents.map((n) => ({ rel: "Parent", name: n!.data.label })),
-    ...children.map((n) => ({ rel: "Child", name: n!.data.label })),
-    ...siblings.map((n) => ({ rel: "Sibling", name: n!.data.label })),
-  ];
+            if (r.type === "spouse") {
+              relList.push({ rel: "Spouse", name: personLabel(other) });
+            } else if (r.type === "parent") {
+              if (r.person_a_id === id) {
+                relList.push({ rel: "Child", name: personLabel(other) });
+              } else {
+                relList.push({ rel: "Parent", name: personLabel(other) });
+              }
+            } else if (r.type === "child") {
+              if (r.person_a_id === id) {
+                relList.push({ rel: "Child", name: personLabel(other) });
+              } else {
+                relList.push({ rel: "Parent", name: personLabel(other) });
+              }
+            } else {
+              relList.push({ rel: r.type, name: personLabel(other) });
+            }
+          }
+        }
+        setRelations(relList);
+      } catch (err) {
+        console.error("Failed to load person:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center text-[#8C8782]">Loading...</div>;
+  }
+
+  if (!person) {
+    return <div className="p-8 text-[#8C8782]">Person not found</div>;
+  }
+
+  const data: Partial<FamilyNodeData> = {
+    label: personLabel(person),
+    firstName: person.first_name,
+    lastName: person.last_name,
+    gender: (person.gender as FamilyNodeData["gender"]) || undefined,
+    dateOfBirth: person.date_of_birth || undefined,
+    dateOfDeath: person.date_of_death || undefined,
+    photo: person.avatar_url || undefined,
+    notes: (person.metadata as Record<string, unknown>)?.notes as string | undefined,
+  };
 
   const age = computeAge(data.dateOfBirth, data.dateOfDeath);
+  const initials = data.label!.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <div className="min-h-screen bg-[#F5F2E9]">
       <div className="mx-auto max-w-5xl p-6">
         <Link
           to="/tree/$id"
-          params={{ id: "1" }}
+          params={{ id: person.tree_id }}
           className="inline-flex items-center gap-1.5 text-xs text-[#8C8782] hover:text-[#2D2926] mb-6"
         >
           <ArrowLeft className="size-3.5" />
           Back to tree
         </Link>
 
-        {/* Card 1 — Header */}
         <Card className="mb-6 border-[#D6D0BE] shadow-sm">
           <CardContent className="flex items-center gap-5 p-6">
             {data.photo ? (
@@ -88,7 +132,7 @@ function PersonPage() {
               />
             ) : (
               <div className="flex size-16 items-center justify-center rounded-full bg-[#7D6B3D] text-lg font-bold text-white">
-                {data.label.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2)}
+                {initials}
               </div>
             )}
             <div>
@@ -98,7 +142,7 @@ function PersonPage() {
               <div className="mt-1 flex items-center gap-3 text-sm text-[#5E5954]">
                 <span>{data.dateOfBirth || "?"} — {data.dateOfDeath || "Present"}</span>
                 <span className="text-[#D6D0BE]">|</span>
-                <span className="capitalize">{data.gender}</span>
+                <span className="capitalize">{data.gender || "—"}</span>
                 <span className="text-[#D6D0BE]">|</span>
                 <span>Age: {age}</span>
               </div>
@@ -107,7 +151,6 @@ function PersonPage() {
         </Card>
 
         <div className="grid grid-cols-2 gap-6">
-          {/* Card 2 — Biography */}
           <Card className="border-[#D6D0BE] shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
@@ -121,7 +164,6 @@ function PersonPage() {
             </CardContent>
           </Card>
 
-          {/* Card 3 — Personal Details */}
           <Card className="border-[#D6D0BE] shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
@@ -158,7 +200,6 @@ function PersonPage() {
             </CardContent>
           </Card>
 
-          {/* Card 4 — Family Relations */}
           <Card className="border-[#D6D0BE] shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
@@ -183,7 +224,6 @@ function PersonPage() {
             </CardContent>
           </Card>
 
-          {/* Card 5 — Life Timeline */}
           <Card className="border-[#D6D0BE] shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">

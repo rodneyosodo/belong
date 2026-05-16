@@ -3,6 +3,8 @@ import { Elysia, Context } from "elysia";
 
 import { auth } from "./lib/auth";
 import { runMigrations } from "./lib/migrate";
+import { treeRoutes } from "./routes/trees";
+import { personRoutes } from "./routes/persons";
 
 const betterAuthView = (context: Context) => {
   const BETTER_AUTH_ACCEPT_METHODS = ["POST", "GET"];
@@ -29,6 +31,8 @@ const start = async () => {
       }),
     )
     .all("/api/auth/*", betterAuthView)
+    .use(treeRoutes)
+    .use(personRoutes)
     .post("/api/upload/avatar", async (context) => {
       const formData = await context.request.formData();
       const file = formData.get("file");
@@ -67,6 +71,54 @@ const start = async () => {
       });
 
       return { success: true };
+    })
+    .post("/api/upload/cover", async (context) => {
+      const formData = await context.request.formData();
+      const file = formData.get("file");
+      const treeId = formData.get("treeId");
+
+      if (!file || !(file instanceof File)) {
+        context.set.status = 400;
+        return { error: "No file provided" };
+      }
+
+      if (!file.type.startsWith("image/")) {
+        context.set.status = 400;
+        return { error: "File must be an image" };
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        context.set.status = 400;
+        return { error: "File must be under 5MB" };
+      }
+
+      if (!treeId || typeof treeId !== "string") {
+        context.set.status = 400;
+        return { error: "treeId is required" };
+      }
+
+      const session = await auth.api.getSession({
+        headers: context.request.headers,
+      });
+
+      if (!session?.user?.id) {
+        context.set.status = 401;
+        return { error: "Unauthorized" };
+      }
+
+      const buffer = await file.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString("base64");
+      const dataUrl = `data:${file.type};base64,${base64}`;
+
+      await auth.api.updateOrganization({
+        body: {
+          organizationId: treeId,
+          data: { coverImage: dataUrl },
+        },
+        headers: context.request.headers,
+      });
+
+      return { success: true, cover_image: dataUrl };
     })
     .get("/", () => "Hello Elysia")
     .listen(5090);

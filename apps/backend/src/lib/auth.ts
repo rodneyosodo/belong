@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { username } from "better-auth/plugins";
 import { anonymous } from "better-auth/plugins";
 import { bearer } from "better-auth/plugins";
+import { organization } from "better-auth/plugins";
 import nodemailer from "nodemailer";
 
 import { pool } from "./db";
@@ -34,10 +35,12 @@ if (githubId && githubSecret) {
   socialProviders.github = { clientId: githubId, clientSecret: githubSecret };
 }
 
+const frontendUrl = (Bun.env.BELONG_FRONTEND_URL as string) || "http://localhost:5091";
+
 export const auth = betterAuth({
   baseURL: (Bun.env.BETTER_AUTH_URL as string) || "http://localhost:5090",
   trustedOrigins: [
-    (Bun.env.BELONG_FRONTEND_URL as string) || "http://localhost:5091",
+    frontendUrl,
   ],
   database: pool,
   emailAndPassword: {
@@ -80,6 +83,70 @@ export const auth = betterAuth({
       }
     },
   },
-  plugins: [username(), anonymous(), bearer()],
+  plugins: [
+    username(),
+    anonymous(),
+    bearer(),
+    organization({
+      schema: {
+        organization: {
+          additionalFields: {
+            description: {
+              type: "string",
+              defaultValue: "",
+              input: true,
+              required: false,
+            },
+            coverImage: {
+              type: "string",
+              defaultValue: "",
+              input: true,
+              required: false,
+            },
+            isPublic: {
+              type: "boolean",
+              defaultValue: false,
+              input: true,
+              required: false,
+            },
+          },
+        },
+      },
+      async sendInvitationEmail(data) {
+        if (!transporter) {
+          console.log("SMTP not configured. Invitation for:", {
+            email: data.email,
+            org: data.organization.name,
+            id: data.id,
+          });
+          return;
+        }
+        const inviteLink = `${frontendUrl}/invitation/${data.id}`;
+        try {
+          await transporter.sendMail({
+            from: Bun.env.BELONG_SMTP_FROM as string,
+            to: data.email,
+            subject: `You're invited to join "${data.organization.name}" on Belong`,
+            html: `
+              <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+                <h1 style="color: #2D2926;">Belong</h1>
+                <p><strong>${data.inviter.user.name}</strong> has invited you to join the family tree <strong>${data.organization.name}</strong>.</p>
+                <a href="${inviteLink}"
+                   style="display: inline-block; padding: 12px 24px; background: #7D6B3D; color: white;
+                          text-decoration: none; border-radius: 6px; margin: 16px 0;">
+                  Accept invitation
+                </a>
+                <p style="color: #5E5954; font-size: 14px;">
+                  If you didn't expect this invitation, you can safely ignore this email.
+                </p>
+              </div>
+            `,
+          });
+        } catch (err) {
+          console.error(`Failed to send invitation email to ${data.email}:`, err);
+        }
+      },
+    }),
+  ],
   socialProviders: Object.keys(socialProviders).length > 0 ? socialProviders : undefined,
 });

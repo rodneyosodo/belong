@@ -1,9 +1,11 @@
 import * as React from "react";
+import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { authClient } from "@/lib/auth-client";
+import { treeApi, type Tree } from "@/lib/api";
 import {
   Sidebar,
   SidebarContent,
@@ -22,34 +24,61 @@ import {
   UserRoundIcon,
 } from "lucide-react";
 
-const navMain = [
-  {
-    title: "My Trees",
-    url: "/",
-    icon: <TreesIcon />,
-    isActive: true,
-    items: [
-      { title: "Anderson Family", url: "/tree/1", count: 24 },
-      { title: "Smith Heritage", url: "/tree/2", count: 12 },
-      { title: "Martinez Family", url: "/tree/3", count: 18 },
-      { title: "Johnson Family", url: "/tree/4", count: 8 },
-    ],
-  },
-  {
-    title: "Shared with Me",
-    url: "#",
-    icon: <Share2Icon />,
-    items: [
-      { title: "Williams Lineage", url: "#", count: 15 },
-      { title: "Brown Ancestry", url: "#", count: 7 },
-    ],
-  },
-];
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  onTreesChanged?: () => void;
+}
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSidebarProps) {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const user = session?.user;
+
+  const [ownedTrees, setOwnedTrees] = useState<Tree[]>([]);
+  const [sharedTrees, setSharedTrees] = useState<Tree[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  const loadTrees = React.useCallback(async () => {
+    try {
+      const data = await treeApi.list();
+      setOwnedTrees(data.owned);
+      setSharedTrees(data.shared);
+    } catch {}
+    setLoaded(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (session?.user) loadTrees();
+  }, [session?.user, loadTrees]);
+
+  React.useEffect(() => {
+    const handler = () => loadTrees();
+    window.addEventListener("trees-changed", handler);
+    return () => window.removeEventListener("trees-changed", handler);
+  }, [loadTrees]);
+
+  const navMain = [
+    {
+      title: "My Trees",
+      url: "/",
+      icon: <TreesIcon />,
+      isActive: true,
+      items: ownedTrees.map((t) => ({
+        title: t.name,
+        url: `/tree/${t.id}`,
+        count: Number(t.person_count ?? 0),
+      })),
+    },
+    {
+      title: "Shared with Me",
+      url: "#",
+      icon: <Share2Icon />,
+      items: sharedTrees.map((t) => ({
+        title: t.name,
+        url: `/tree/${t.id}`,
+        count: Number(t.person_count ?? 0),
+      })),
+    },
+  ];
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -64,7 +93,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           </div>
         </SidebarGroup>
-        <NavMain items={navMain} />
+        {loaded && <NavMain items={navMain} />}
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>

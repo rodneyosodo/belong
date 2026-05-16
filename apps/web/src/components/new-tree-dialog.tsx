@@ -11,17 +11,43 @@ import {
 import { Button } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
-import { GitBranchIcon, UploadIcon, FileTextIcon } from "lucide-react"
+import { GitBranchIcon, UploadIcon, FileTextIcon, Loader2 } from "lucide-react"
+import { treeApi } from "@/lib/api"
+import { toast } from "sonner"
+import { useNavigate } from "@tanstack/react-router"
 
 interface NewTreeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onCreated?: () => void
 }
 
-export function NewTreeDialog({ open, onOpenChange }: NewTreeDialogProps) {
+export function NewTreeDialog({ open, onOpenChange, onCreated }: NewTreeDialogProps) {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [method, setMethod] = useState<"scratch" | "gedcom">("scratch")
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+
+  const handleCreate = async () => {
+    if (!name.trim()) return
+    setLoading(true)
+    try {
+      const tree = await treeApi.create({ name: name.trim(), description: description.trim() })
+      toast.success(`"${tree.name}" created`)
+      setName("")
+      setDescription("")
+      setMethod("scratch")
+      onOpenChange(false)
+      window.dispatchEvent(new Event("trees-changed"))
+      onCreated?.()
+      navigate({ to: "/tree/$id", params: { id: tree.id } })
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create tree")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -129,9 +155,11 @@ export function NewTreeDialog({ open, onOpenChange }: NewTreeDialogProps) {
             }
           />
           <Button
-            disabled={!name.trim()}
+            disabled={!name.trim() || loading}
+            onClick={handleCreate}
             className="h-11 rounded-lg bg-[#7D6B3D] px-6 text-sm font-semibold text-[#F5F2E9] hover:bg-[#6A5A32] disabled:opacity-50"
           >
+            {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
             Create Tree
           </Button>
         </DialogFooter>

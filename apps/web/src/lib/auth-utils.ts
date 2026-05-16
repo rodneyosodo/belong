@@ -3,7 +3,6 @@ import { redirect } from '@tanstack/react-router';
 import { env } from './env';
 
 const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password'];
-const publicRoutes = authRoutes;
 
 export interface SessionData {
   user: {
@@ -30,12 +29,15 @@ export async function getSession(): Promise<SessionData | null> {
   }
 }
 
-export function isPublicRoute(pathname: string): boolean {
-  return publicRoutes.includes(pathname);
-}
-
 export function isAuthRoute(pathname: string): boolean {
   return authRoutes.includes(pathname);
+}
+
+export function isPubliclyAccessible(pathname: string): boolean {
+  if (authRoutes.includes(pathname)) return true;
+  if (/^\/tree\/[^/]+$/.test(pathname)) return true;
+  if (/^\/person\/[^/]+$/.test(pathname)) return true;
+  return false;
 }
 
 export async function authGuard({ location }: { location: { pathname: string } }) {
@@ -45,7 +47,7 @@ export async function authGuard({ location }: { location: { pathname: string } }
     throw redirect({ to: '/' });
   }
 
-  if (!session && !isPublicRoute(location.pathname)) {
+  if (!session && !isPubliclyAccessible(location.pathname)) {
     throw redirect({ to: '/login' });
   }
 }

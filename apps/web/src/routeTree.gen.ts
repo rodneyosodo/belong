@@ -18,6 +18,8 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TreeIdRouteImport } from './routes/tree.$id'
 import { Route as PersonIdRouteImport } from './routes/person.$id'
+import { Route as InvitationIdRouteImport } from './routes/invitation.$id'
+import { Route as TreeIdSettingsRouteImport } from './routes/tree.$id_.settings'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -64,6 +66,16 @@ const PersonIdRoute = PersonIdRouteImport.update({
   path: '/person/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvitationIdRoute = InvitationIdRouteImport.update({
+  id: '/invitation/$id',
+  path: '/invitation/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TreeIdSettingsRoute = TreeIdSettingsRouteImport.update({
+  id: '/tree/$id_/settings',
+  path: '/tree/$id/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,8 +85,10 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/invitation/$id': typeof InvitationIdRoute
   '/person/$id': typeof PersonIdRoute
   '/tree/$id': typeof TreeIdRoute
+  '/tree/$id/settings': typeof TreeIdSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -84,8 +98,10 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/invitation/$id': typeof InvitationIdRoute
   '/person/$id': typeof PersonIdRoute
   '/tree/$id': typeof TreeIdRoute
+  '/tree/$id/settings': typeof TreeIdSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -96,8 +112,10 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/invitation/$id': typeof InvitationIdRoute
   '/person/$id': typeof PersonIdRoute
   '/tree/$id': typeof TreeIdRoute
+  '/tree/$id_/settings': typeof TreeIdSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -109,8 +127,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/invitation/$id'
     | '/person/$id'
     | '/tree/$id'
+    | '/tree/$id/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -120,8 +140,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/invitation/$id'
     | '/person/$id'
     | '/tree/$id'
+    | '/tree/$id/settings'
   id:
     | '__root__'
     | '/'
@@ -131,8 +153,10 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/invitation/$id'
     | '/person/$id'
     | '/tree/$id'
+    | '/tree/$id_/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -143,8 +167,10 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  InvitationIdRoute: typeof InvitationIdRoute
   PersonIdRoute: typeof PersonIdRoute
   TreeIdRoute: typeof TreeIdRoute
+  TreeIdSettingsRoute: typeof TreeIdSettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +238,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PersonIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invitation/$id': {
+      id: '/invitation/$id'
+      path: '/invitation/$id'
+      fullPath: '/invitation/$id'
+      preLoaderRoute: typeof InvitationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tree/$id_/settings': {
+      id: '/tree/$id_/settings'
+      path: '/tree/$id/settings'
+      fullPath: '/tree/$id/settings'
+      preLoaderRoute: typeof TreeIdSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -223,8 +263,10 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  InvitationIdRoute: InvitationIdRoute,
   PersonIdRoute: PersonIdRoute,
   TreeIdRoute: TreeIdRoute,
+  TreeIdSettingsRoute: TreeIdSettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

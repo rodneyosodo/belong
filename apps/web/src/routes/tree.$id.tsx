@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useRef } from "react"
+import { useRef, useState, useEffect } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { FamilyTree, type FamilyTreeHandle } from "@/components/family-tree"
 import {
@@ -16,6 +16,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar"
+import { SettingsIcon } from "lucide-react"
+import { treeApi, type Tree } from "@/lib/api"
 
 export const Route = createFileRoute("/tree/$id")({
   component: TreePage,
@@ -23,6 +25,12 @@ export const Route = createFileRoute("/tree/$id")({
 
 function TreePage() {
   const shareRef = useRef<FamilyTreeHandle>(null);
+  const { id } = Route.useParams()
+  const [tree, setTree] = useState<Tree | null>(null)
+
+  useEffect(() => {
+    treeApi.get(id).then(setTree).catch(() => {})
+  }, [id])
 
   return (
     <SidebarProvider>
@@ -44,7 +52,7 @@ function TreePage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Tree</BreadcrumbPage>
+                  <BreadcrumbPage>{tree?.name ?? "Tree"}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -72,14 +80,22 @@ function TreePage() {
             </button>
             <Link
               to="/import"
+              search={{ treeId: id }}
               className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-1.5 text-xs font-medium text-[#2D2926] hover:bg-white"
             >
               Import
             </Link>
+            <Link
+              to="/tree/$id/settings"
+              params={{ id }}
+              className="rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] p-1.5 text-[#2D2926] hover:bg-white"
+            >
+              <SettingsIcon className="size-4" />
+            </Link>
           </div>
         </header>
         <div className="flex-1">
-          <FamilyTree ref={shareRef} />
+          <FamilyTree ref={shareRef} treeId={id} />
         </div>
       </SidebarInset>
     </SidebarProvider>

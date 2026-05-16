@@ -24,9 +24,9 @@ import "@xyflow/react/dist/style.css";
 
 import FamilyTreeNode from "./family-tree-node";
 import type { FamilyNodeData } from "./family-tree-node";
-import { initialNodes, initialEdges } from "./family-tree-data";
 import { NodeContextMenu, type ContextMenuAction } from "./node-context-menu";
 import { AddPersonDialog, type PersonFormData } from "./add-person-dialog";
+import { personApi, relationshipApi, type Person, type Relationship } from "@/lib/api";
 
 const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 
@@ -100,30 +100,57 @@ function getLayoutedElements(nodes: Node<FamilyNodeData>[], edges: Edge[], direc
   return { nodes: newNodes, edges };
 }
 
-function loadData() {
-  const savedNodes = localStorage.getItem("family-tree-nodes");
-  const savedEdges = localStorage.getItem("family-tree-edges");
-  if (savedNodes && savedEdges) {
-    try {
-      const nodes = JSON.parse(savedNodes) as Node<FamilyNodeData>[];
-      const edges = JSON.parse(savedEdges) as Edge[];
-      return { nodes, edges };
-    } catch {}
-  }
-  return { nodes: initialNodes, edges: initialEdges };
+function personToNode(p: Person): Node<FamilyNodeData> {
+  const gen = (p.metadata as Record<string, unknown>)?.generation as number ?? 0;
+  return {
+    id: p.id,
+    type: "family",
+    position: { x: 0, y: 0 },
+    data: {
+      label: `${p.first_name} ${p.last_name}`.trim(),
+      firstName: p.first_name,
+      lastName: p.last_name,
+      gender: (p.gender as FamilyNodeData["gender"]) || undefined,
+      generation: gen,
+      dateOfBirth: p.date_of_birth || undefined,
+      dateOfDeath: p.date_of_death || undefined,
+      photo: p.avatar_url || undefined,
+      subtitle: p.date_of_birth
+        ? `${p.date_of_birth}${p.date_of_death ? `-${p.date_of_death}` : ""}`
+        : undefined,
+    },
+  };
 }
 
-const { nodes: initialLoadNodes, edges: initialLoadEdges } = loadData();
-const layouted = getLayoutedElements(initialLoadNodes, initialLoadEdges);
+function relationshipToEdge(r: Relationship): Edge {
+  const isSpouse = r.type === "spouse";
+  return {
+    id: r.id,
+    source: r.person_a_id,
+    target: r.person_b_id,
+    sourceHandle: isSpouse ? "right" : "bottom",
+    targetHandle: isSpouse ? "left" : "top",
+    type: isSpouse ? "straight" : "smoothstep",
+    style: isSpouse ? { stroke: "#7D6B3D" } : { stroke: "#8C8782", strokeWidth: 1.5 },
+    label: isSpouse ? "spouse" : undefined,
+  };
+}
 
-let nextId = Math.max(0, ...initialLoadNodes.map((n) => Number(n.id))) + 1;
-function generateId() {
-  return String(nextId++);
+function computeGeneration(personId: string, edges: Edge[], nodes: Node<FamilyNodeData>[]): number {
+  const visited = new Set<string>();
+  function depth(id: string): number {
+    if (visited.has(id)) return 0;
+    visited.add(id);
+    const parents = edges.filter((e) => e.target === id && e.type === "smoothstep");
+    if (parents.length === 0) return 0;
+    return 1 + Math.max(...parents.map((e) => depth(e.source)));
+  }
+  return depth(personId);
 }
 
 function findParents(nodeId: string, allEdges: Edge[]): string[] {
   return allEdges
-    .filter((e) => e.target === nodeId && !e.label)
+    .filter((e) => e.target === nodeId && e.type === "smoothstep")
     .map((e) => e.source);
 }
 
@@ -258,18 +285,20 @@ function toGedcom(nodes: Node<FamilyNodeData>[], edges: Edge[]): string {
 }
 
 export type FamilyTreeHandle = { addMember: () => void; exportTree: () => void };
+type FamilyTreeProps = { treeId: string };
 
-export const FamilyTree = forwardRef<FamilyTreeHandle>(function FamilyTree(_props, ref) {
+export const FamilyTree = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function FamilyTree({ treeId }, ref) {
   return (
     <ReactFlowProvider>
-      <FamilyTreeInner ref={ref} />
+      <FamilyTreeInner ref={ref} treeId={treeId} />
     </ReactFlowProvider>
   );
 });
 
-const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_props, ref) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(layouted.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layouted.edges);
+const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function FamilyTreeInner({ treeId }, ref) {
+  const [nodes, setNodes, onNodesChange] = useNodesState<FamilyNodeData>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [loading, setLoading] = useState(true);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -300,10 +329,34 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
     return { memberCount, living, generations };
   }, [nodes]);
 
+  const loadTreeData = useCallback(async () => {
+    try {
+      const [persons, relationships] = await Promise.all([
+        personApi.list(treeId),
+        relationshipApi.list(treeId),
+      ]);
+
+      const flowNodes = persons.map(personToNode);
+      const flowEdges = relationships.map(relationshipToEdge);
+
+      flowNodes.forEach((node) => {
+        const data = node.data as FamilyNodeData;
+        data.generation = computeGeneration(node.id, flowEdges, flowNodes);
+      });
+
+      const layouted = getLayoutedElements(flowNodes, flowEdges);
+      setNodes(layouted.nodes);
+      setEdges(layouted.edges);
+    } catch (err) {
+      console.error("Failed to load tree data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [treeId, setNodes, setEdges]);
+
   useEffect(() => {
-    localStorage.setItem("family-tree-nodes", JSON.stringify(nodes));
-    localStorage.setItem("family-tree-edges", JSON.stringify(edges));
-  }, [nodes, edges]);
+    loadTreeData();
+  }, [loadTreeData]);
 
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
@@ -388,10 +441,14 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
     (action: ContextMenuAction) => {
       if (!contextMenu) return;
       if (action === "delete") {
+        personApi.delete(treeId, contextMenu.nodeId).catch(console.error);
+        const edgesToDelete = edges.filter(
+          (e) => e.source === contextMenu.nodeId || e.target === contextMenu.nodeId,
+        );
+        Promise.all(edgesToDelete.map((e) => relationshipApi.delete(treeId, e.id))).catch(console.error);
         const newNodes = nodes.filter((n) => n.id !== contextMenu.nodeId);
         const newEdges = edges.filter(
-          (e) =>
-            e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId,
+          (e) => e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId,
         );
         relayout(newNodes, newEdges);
         return;
@@ -403,18 +460,17 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
         targetData: contextMenu.nodeData,
       });
     },
-    [contextMenu, nodes, edges, relayout],
+    [contextMenu, nodes, edges, relayout, treeId],
   );
 
   const handleDialogConfirm = useCallback(
-    (data: PersonFormData) => {
+    async (data: PersonFormData) => {
       if (!dialogState.open) return;
 
       const { action, targetId, targetData } = dialogState;
-      const newId = generateId();
-      let newGeneration = targetData.generation;
       const fullName = `${data.firstName} ${data.lastName}`;
 
+      let newGeneration = targetData.generation;
       switch (action) {
         case "add":
           newGeneration = 0;
@@ -430,90 +486,74 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
           break;
       }
 
-      const newNode: Node<FamilyNodeData> = {
-        id: newId,
-        type: "family",
-        position: { x: 0, y: 0 },
-        data: {
-          label: fullName,
-          firstName: data.firstName,
-          lastName: data.lastName,
+      try {
+        const createdPerson = await personApi.create(treeId, {
+          first_name: data.firstName,
+          last_name: data.lastName,
           gender: data.gender,
-          generation: newGeneration,
-          dateOfBirth: data.dateOfBirth,
-          dateOfDeath: data.dateOfDeath,
-          notes: data.notes,
-          photo: data.photo,
-          relationshipType: data.relationshipType,
-        },
-      };
+          date_of_birth: data.dateOfBirth,
+          date_of_death: data.dateOfDeath,
+          avatar_url: data.photo,
+          metadata: { generation: newGeneration, notes: data.notes, relationshipType: data.relationshipType },
+        });
 
-      const newEdges: Edge[] = [];
+        const newNode = personToNode(createdPerson);
+        const newEdges: Edge[] = [];
 
-      switch (action) {
-        case "add":
-          break;
-        case "spouse": {
-          newEdges.push({
-            id: `e${targetId}-${newId}`,
-            source: targetId,
-            target: newId,
-            sourceHandle: "right",
-            targetHandle: "left",
-            type: "straight",
-            style: { stroke: "#7D6B3D" },
-            label: "spouse",
-          });
-          break;
-        }
-        case "child": {
-          const motherId = findMother(targetId, nodes, edges) ?? targetId;
-          newEdges.push({
-            id: `e${motherId}-${newId}`,
-            source: motherId,
-            target: newId,
-            sourceHandle: "bottom",
-            targetHandle: "top",
-            type: "smoothstep",
-            style: { stroke: "#8C8782", strokeWidth: 1.5 },
-          });
-          break;
-        }
-        case "parent": {
-          newEdges.push({
-            id: `e${newId}-${targetId}`,
-            source: newId,
-            target: targetId,
-            sourceHandle: "bottom",
-            targetHandle: "top",
-            type: "smoothstep",
-            style: { stroke: "#8C8782", strokeWidth: 1.5 },
-          });
-          break;
-        }
-        case "sibling": {
-          const parents = findParents(targetId, edges);
-          parents.forEach((parentId) => {
-            newEdges.push({
-              id: `e${parentId}-${newId}`,
-              source: parentId,
-              target: newId,
-              sourceHandle: "bottom",
-              targetHandle: "top",
-              type: "smoothstep",
-              style: { stroke: "#8C8782", strokeWidth: 1.5 },
+        switch (action) {
+          case "add":
+            break;
+          case "spouse": {
+            const rel = await relationshipApi.create(treeId, {
+              person_a_id: targetId,
+              person_b_id: createdPerson.id,
+              type: "spouse",
             });
-          });
-          break;
+            newEdges.push(relationshipToEdge(rel));
+            break;
+          }
+          case "child": {
+            const motherId = findMother(targetId, nodes, edges) ?? targetId;
+            const rel = await relationshipApi.create(treeId, {
+              person_a_id: motherId,
+              person_b_id: createdPerson.id,
+              type: "child",
+            });
+            newEdges.push(relationshipToEdge(rel));
+            break;
+          }
+          case "parent": {
+            const rel = await relationshipApi.create(treeId, {
+              person_a_id: createdPerson.id,
+              person_b_id: targetId,
+              type: "parent",
+            });
+            newEdges.push(relationshipToEdge(rel));
+            break;
+          }
+          case "sibling": {
+            const parents = findParents(targetId, edges);
+            for (const parentId of parents) {
+              const rel = await relationshipApi.create(treeId, {
+                person_a_id: parentId,
+                person_b_id: createdPerson.id,
+                type: "child",
+              });
+              newEdges.push(relationshipToEdge(rel));
+            }
+            break;
+          }
         }
-      }
 
-      const allNodes = [...nodes, newNode];
-      const allEdges = [...edges, ...newEdges];
-      setDialogState((prev) => ({ ...prev, open: false }));
-      relayout(allNodes, allEdges);
+        const allNodes = [...nodes, newNode];
+        const allEdges = [...edges, ...newEdges];
+        setDialogState((prev) => ({ ...prev, open: false }));
+        relayout(allNodes, allEdges);
+      } catch (err) {
+        console.error("Failed to create person:", err);
+      }
     },
-    [dialogState, nodes, edges, relayout],
+    [dialogState, nodes, edges, relayout, treeId],
   );
 
   const defaultEdgeOptions = useMemo(
@@ -523,6 +563,14 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle>(function FamilyTreeInner(_p
     }),
     [],
   );
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center text-[#8C8782]">
+        Loading tree...
+      </div>
+    );
+  }
 
   return (
     <>
