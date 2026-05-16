@@ -1,113 +1,114 @@
-import { useState, useEffect } from "react"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Button } from '@workspace/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card"
-import { Button } from "@workspace/ui/components/button"
-import { Loader2, CheckCircleIcon, XCircleIcon, MailIcon } from "lucide-react"
-import { toast } from "sonner"
-import { authClient } from "@/lib/auth-client"
+} from '@workspace/ui/components/card';
+import { Loader2, CheckCircleIcon, XCircleIcon, MailIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
-export const Route = createFileRoute("/invitation/$id")({
+import { authClient } from '@/lib/auth-client';
+
+export const Route = createFileRoute('/invitation/$id')({
   component: InvitationPage,
-})
+});
 
 interface InvitationData {
-  id: string
-  email: string
-  role: string
-  status: string
-  organizationId: string
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  organizationId: string;
   organization: {
-    name: string
-    slug: string
-  }
+    name: string;
+    slug: string;
+  };
   inviter: {
     user: {
-      name: string
-    }
-  }
-  expiresAt: Date
+      name: string;
+    };
+  };
+  expiresAt: Date;
 }
 
 function InvitationPage() {
-  const { id } = Route.useParams()
-  const navigate = useNavigate()
-  const [invitation, setInvitation] = useState<InvitationData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [responding, setResponding] = useState(false)
-  const [responded, setResponded] = useState<"accepted" | "declined" | null>(null)
+  const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const [invitation, setInvitation] = useState<InvitationData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [responding, setResponding] = useState(false);
+  const [responded, setResponded] = useState<'accepted' | 'declined' | null>(null);
 
   useEffect(() => {
     async function load() {
-      const { data: session } = authClient.useSession()
+      const { data: session } = authClient.useSession();
       if (!session) {
-        navigate({ to: "/login" })
-        return
+        navigate({ to: '/login' });
+        return;
       }
 
       try {
         const { data, error } = await authClient.organization.getInvitation({
           query: { id },
-        })
+        });
         if (error || !data) {
-          toast.error("Invitation not found")
-          navigate({ to: "/" })
-          return
+          toast.error('Invitation not found');
+          navigate({ to: '/' });
+          return;
         }
-        setInvitation(data as unknown as InvitationData)
+        setInvitation(data as unknown as InvitationData);
       } catch {
-        toast.error("Failed to load invitation")
-        navigate({ to: "/" })
+        toast.error('Failed to load invitation');
+        navigate({ to: '/' });
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    load()
-  }, [id, navigate])
+    load();
+  }, [id, navigate]);
 
   const handleAccept = async () => {
-    setResponding(true)
+    setResponding(true);
     try {
       const { error } = await authClient.organization.acceptInvitation({
         invitationId: id,
-      })
-      if (error) throw error
-      setResponded("accepted")
-      toast.success("Invitation accepted!")
+      });
+      if (error) throw error;
+      setResponded('accepted');
+      toast.success('Invitation accepted!');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to accept invitation")
+      toast.error(err instanceof Error ? err.message : 'Failed to accept invitation');
     } finally {
-      setResponding(false)
+      setResponding(false);
     }
-  }
+  };
 
   const handleDecline = async () => {
-    setResponding(true)
+    setResponding(true);
     try {
       const { error } = await authClient.organization.rejectInvitation({
         invitationId: id,
-      })
-      if (error) throw error
-      setResponded("declined")
-      toast.success("Invitation declined")
+      });
+      if (error) throw error;
+      setResponded('declined');
+      toast.success('Invitation declined');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to decline invitation")
+      toast.error(err instanceof Error ? err.message : 'Failed to decline invitation');
     } finally {
-      setResponding(false)
+      setResponding(false);
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F5F2E9]">
         <Loader2 className="size-8 animate-spin text-[#7D6B3D]" />
       </div>
-    )
+    );
   }
 
   if (responded) {
@@ -115,16 +116,16 @@ function InvitationPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#F5F2E9] p-4">
         <Card className="w-full max-w-md border-[#D6D0BE]">
           <CardContent className="flex flex-col items-center gap-4 py-8">
-            {responded === "accepted" ? (
+            {responded === 'accepted' ? (
               <>
                 <CheckCircleIcon className="size-12 text-green-500" />
                 <h2 className="font-['Playfair_Display'] text-xl font-semibold text-[#2D2926]">
                   Invitation Accepted!
                 </h2>
-                <p className="text-sm text-[#5E5954] text-center">
+                <p className="text-center text-sm text-[#5E5954]">
                   You have joined "{invitation?.organization.name}".
                 </p>
-                <Button onClick={() => navigate({ to: "/" })}>Go to Dashboard</Button>
+                <Button onClick={() => navigate({ to: '/' })}>Go to Dashboard</Button>
               </>
             ) : (
               <>
@@ -132,13 +133,13 @@ function InvitationPage() {
                 <h2 className="font-['Playfair_Display'] text-xl font-semibold text-[#2D2926]">
                   Invitation Declined
                 </h2>
-                <Button onClick={() => navigate({ to: "/" })}>Go to Dashboard</Button>
+                <Button onClick={() => navigate({ to: '/' })}>Go to Dashboard</Button>
               </>
             )}
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -152,22 +153,25 @@ function InvitationPage() {
             Tree Invitation
           </CardTitle>
           <CardDescription>
-            {invitation?.inviter?.user?.name ?? "Someone"} has invited you to join
+            {invitation?.inviter?.user?.name ?? 'Someone'} has invited you to join
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
           <p className="text-lg font-semibold text-[#2D2926]">
-            {invitation?.organization?.name ?? "a family tree"}
+            {invitation?.organization?.name ?? 'a family tree'}
           </p>
           <p className="text-sm text-[#5E5954]">
-            Role: <span className="font-medium">{invitation?.role === "admin" ? "Editor" : invitation?.role === "member" ? "Viewer" : invitation?.role}</span>
+            Role:{' '}
+            <span className="font-medium">
+              {invitation?.role === 'admin'
+                ? 'Editor'
+                : invitation?.role === 'member'
+                  ? 'Viewer'
+                  : invitation?.role}
+            </span>
           </p>
-          <div className="flex gap-3 mt-4">
-            <Button
-              variant="outline"
-              onClick={handleDecline}
-              disabled={responding}
-            >
+          <div className="mt-4 flex gap-3">
+            <Button variant="outline" onClick={handleDecline} disabled={responding}>
               {responding && <Loader2 className="mr-2 size-4 animate-spin" />}
               Decline
             </Button>
@@ -183,5 +187,5 @@ function InvitationPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

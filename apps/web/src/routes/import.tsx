@@ -1,7 +1,4 @@
-import { useState, useRef, useEffect, type ChangeEvent } from "react"
-import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router"
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, PlusIcon } from "lucide-react"
-import { AppSidebar } from "@/components/app-sidebar"
+import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,39 +6,49 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@workspace/ui/components/breadcrumb"
-import { Separator } from "@workspace/ui/components/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@workspace/ui/components/sidebar"
+} from '@workspace/ui/components/breadcrumb';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@workspace/ui/components/card"
-import { importApi, treeApi, type Tree } from "@/lib/api"
+} from '@workspace/ui/components/card';
+import { Separator } from '@workspace/ui/components/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, PlusIcon } from 'lucide-react';
+import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 
-export const Route = createFileRoute("/import")({
+import { AppSidebar } from '@/components/app-sidebar';
+import { importApi, treeApi, type Tree } from '@/lib/api';
+
+export const Route = createFileRoute('/import')({
   validateSearch: (search: Record<string, unknown>) => ({
-    treeId: (search.treeId as string) || "",
+    treeId: (search.treeId as string) || '',
   }),
   component: ImportPage,
-})
+});
 
 const MONTHS: Record<string, string> = {
-  JAN: "01", FEB: "02", MAR: "03", APR: "04", MAY: "05", JUN: "06",
-  JUL: "07", AUG: "08", SEP: "09", OCT: "10", NOV: "11", DEC: "12",
+  JAN: '01',
+  FEB: '02',
+  MAR: '03',
+  APR: '04',
+  MAY: '05',
+  JUN: '06',
+  JUL: '07',
+  AUG: '08',
+  SEP: '09',
+  OCT: '10',
+  NOV: '11',
+  DEC: '12',
 };
 
 function normalizeDate(dateStr?: string): string | undefined {
   if (!dateStr) return undefined;
-  const parts = dateStr.split(" ");
+  const parts = dateStr.split(' ');
   if (parts.length === 3) {
-    const d = parts[0].padStart(2, "0");
+    const d = parts[0].padStart(2, '0');
     const m = MONTHS[parts[1].toUpperCase()];
     const y = parts[2];
     return m ? `${y}-${m}-${d}` : dateStr;
@@ -59,30 +66,37 @@ function parseName(value: string): { firstName: string; lastName: string } {
     const last = m[2].trim();
     return { firstName: first || last, lastName: last || first };
   }
-  const cleaned = value.replace(/\//g, "").trim();
-  const i = cleaned.lastIndexOf(" ");
+  const cleaned = value.replace(/\//g, '').trim();
+  const i = cleaned.lastIndexOf(' ');
   return i > 0
     ? { firstName: cleaned.slice(0, i), lastName: cleaned.slice(i + 1) }
-    : { firstName: cleaned, lastName: "" };
+    : { firstName: cleaned, lastName: '' };
 }
 
 type GedLine = { level: number; xref?: string; tag: string; value?: string };
 
 function tokenize(text: string): GedLine[] {
-  return text.split("\n").filter(Boolean).map((line) => {
-    const trimmed = line.trim();
-    const parts = trimmed.split(" ");
-    const level = Number(parts[0]);
-    let idx = 1;
-    let xref: string | undefined;
-    if (parts[1]?.startsWith("@")) {
-      xref = parts[1];
-      idx = 2;
-    }
-    const tag = parts[idx] || "";
-    const value = parts.slice(idx + 1).join(" ").trim() || undefined;
-    return { level, xref, tag, value };
-  });
+  return text
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      const trimmed = line.trim();
+      const parts = trimmed.split(' ');
+      const level = Number(parts[0]);
+      let idx = 1;
+      let xref: string | undefined;
+      if (parts[1]?.startsWith('@')) {
+        xref = parts[1];
+        idx = 2;
+      }
+      const tag = parts[idx] || '';
+      const value =
+        parts
+          .slice(idx + 1)
+          .join(' ')
+          .trim() || undefined;
+      return { level, xref, tag, value };
+    });
 }
 
 function buildTree(lines: GedLine[]) {
@@ -140,7 +154,10 @@ interface ParsedRelationship {
   type: string;
 }
 
-function parseGedcom(text: string): { persons: ParsedPerson[]; relationships: ParsedRelationship[] } {
+function parseGedcom(text: string): {
+  persons: ParsedPerson[];
+  relationships: ParsedRelationship[];
+} {
   const lines = tokenize(text);
   const tree = buildTree(lines);
 
@@ -148,8 +165,8 @@ function parseGedcom(text: string): { persons: ParsedPerson[]; relationships: Pa
   const families: Record<string, any> = {};
 
   for (const node of tree) {
-    if (node.tag === "INDI" && node.xref) individuals[node.xref] = node;
-    if (node.tag === "FAM" && node.xref) families[node.xref] = node;
+    if (node.tag === 'INDI' && node.xref) individuals[node.xref] = node;
+    if (node.tag === 'FAM' && node.xref) families[node.xref] = node;
   }
 
   let idCounter = 0;
@@ -164,12 +181,12 @@ function parseGedcom(text: string): { persons: ParsedPerson[]; relationships: Pa
 
   for (const [xref, node] of Object.entries(individuals)) {
     const idx = getId(xref);
-    const nameVal = findChildValue(node, "NAME") || "Unknown";
+    const nameVal = findChildValue(node, 'NAME') || 'Unknown';
     const { firstName, lastName } = parseName(nameVal);
-    const sex = findChildValue(node, "SEX");
-    const gender = sex === "F" ? "female" : sex === "M" ? "male" : "";
-    const birthDate = normalizeDate(getAllValues(node, ["BIRT", "DATE"])) || "";
-    const deathDate = normalizeDate(getAllValues(node, ["DEAT", "DATE"])) || "";
+    const sex = findChildValue(node, 'SEX');
+    const gender = sex === 'F' ? 'female' : sex === 'M' ? 'male' : '';
+    const birthDate = normalizeDate(getAllValues(node, ['BIRT', 'DATE'])) || '';
+    const deathDate = normalizeDate(getAllValues(node, ['DEAT', 'DATE'])) || '';
 
     persons.push({
       idx,
@@ -184,9 +201,9 @@ function parseGedcom(text: string): { persons: ParsedPerson[]; relationships: Pa
   const relationships: ParsedRelationship[] = [];
 
   for (const [, node] of Object.entries(families)) {
-    const husb = findChildValue(node, "HUSB");
-    const wife = findChildValue(node, "WIFE");
-    const children = getTagValues(node, "CHIL");
+    const husb = findChildValue(node, 'HUSB');
+    const wife = findChildValue(node, 'WIFE');
+    const children = getTagValues(node, 'CHIL');
 
     const husbIdx = husb ? getId(husb) : -1;
     const wifeIdx = wife ? getId(wife) : -1;
@@ -195,7 +212,7 @@ function parseGedcom(text: string): { persons: ParsedPerson[]; relationships: Pa
       relationships.push({
         person_a_id: husbIdx,
         person_b_id: wifeIdx,
-        type: "spouse",
+        type: 'spouse',
       });
     }
 
@@ -207,7 +224,7 @@ function parseGedcom(text: string): { persons: ParsedPerson[]; relationships: Pa
         relationships.push({
           person_a_id: motherIdx,
           person_b_id: childIdx,
-          type: "child",
+          type: 'child',
         });
       }
     }
@@ -222,32 +239,39 @@ function ImportPage() {
   const [trees, setTrees] = useState<Tree[]>([]);
   const [selectedTreeId, setSelectedTreeId] = useState(search.treeId);
   const [creating, setCreating] = useState(false);
-  const [result, setResult] = useState<{ person_count: number; relationship_count: number } | null>(null);
+  const [result, setResult] = useState<{ person_count: number; relationship_count: number } | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const parsedRef = useRef<{ persons: ParsedPerson[]; relationships: ParsedRelationship[] } | null>(null);
+  const parsedRef = useRef<{ persons: ParsedPerson[]; relationships: ParsedRelationship[] } | null>(
+    null,
+  );
 
   useEffect(() => {
-    treeApi.list().then((data) => {
-      const all = [...data.owned, ...data.shared];
-      setTrees(all);
-      if (!selectedTreeId && all.length > 0) {
-        setSelectedTreeId(all[0].id);
-      }
-    }).catch(() => {});
+    treeApi
+      .list()
+      .then((data) => {
+        const all = [...data.owned, ...data.shared];
+        setTrees(all);
+        if (!selectedTreeId && all.length > 0) {
+          setSelectedTreeId(all[0].id);
+        }
+      })
+      .catch(() => {});
   }, [selectedTreeId]);
 
   const handleCreateTree = async () => {
     setCreating(true);
     setError(null);
     try {
-      const tree = await treeApi.create({ name: "Imported Tree" });
+      const tree = await treeApi.create({ name: 'Imported Tree' });
       setTrees((prev) => [...prev, tree]);
       setSelectedTreeId(tree.id);
     } catch (err: any) {
-      setError(err.message || "Failed to create tree.");
+      setError(err.message || 'Failed to create tree.');
     } finally {
       setCreating(false);
     }
@@ -265,20 +289,23 @@ function ImportPage() {
         const text = evt.target?.result as string;
         const parsed = parseGedcom(text);
         if (parsed.persons.length === 0) {
-          setError("No individuals found in this GEDCOM file.");
+          setError('No individuals found in this GEDCOM file.');
           parsedRef.current = null;
         } else {
           parsedRef.current = parsed;
-          setResult({ person_count: parsed.persons.length, relationship_count: parsed.relationships.length });
+          setResult({
+            person_count: parsed.persons.length,
+            relationship_count: parsed.relationships.length,
+          });
         }
       } catch (err: any) {
-        setError(err.message || "Failed to parse GEDCOM file.");
+        setError(err.message || 'Failed to parse GEDCOM file.');
         parsedRef.current = null;
       }
       setLoading(false);
     };
     reader.onerror = () => {
-      setError("Failed to read file.");
+      setError('Failed to read file.');
       setLoading(false);
     };
     reader.readAsText(file);
@@ -299,9 +326,9 @@ function ImportPage() {
         })),
         relationships: parsedRef.current.relationships,
       });
-      navigate({ to: "/tree/$id", params: { id: selectedTreeId } });
+      navigate({ to: '/tree/$id', params: { id: selectedTreeId } });
     } catch (err: any) {
-      setError(err.message || "Import failed.");
+      setError(err.message || 'Import failed.');
     } finally {
       setUploading(false);
     }
@@ -316,10 +343,7 @@ function ImportPage() {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
@@ -338,7 +362,7 @@ function ImportPage() {
         <div className="flex flex-1 items-center justify-center p-6">
           <Card className="w-full max-w-lg border-[#D6D0BE] shadow-sm">
             <CardHeader>
-              <CardTitle className="font-['Playfair_Display'] text-lg font-semibold text-[#2D2926] flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 font-['Playfair_Display'] text-lg font-semibold text-[#2D2926]">
                 <Upload className="size-4 text-[#7D6B3D]" />
                 Import GEDCOM
               </CardTitle>
@@ -348,7 +372,9 @@ function ImportPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#2D2926]">Import into</label>
+                <label className="mb-1.5 block text-sm font-medium text-[#2D2926]">
+                  Import into
+                </label>
                 {trees.length > 0 ? (
                   <select
                     value={selectedTreeId}
@@ -356,7 +382,9 @@ function ImportPage() {
                     className="w-full rounded-lg border border-[#D6D0BE] bg-white px-3 py-2 text-sm text-[#2D2926] outline-none focus:border-[#7D6B3D]"
                   >
                     {trees.map((t) => (
-                      <option key={t.id} value={t.id}>{t.name} ({t.person_count ?? 0} people)</option>
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.person_count ?? 0} people)
+                      </option>
                     ))}
                   </select>
                 ) : (
@@ -383,16 +411,14 @@ function ImportPage() {
               {selectedTreeId && (
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#D6D0BE] bg-white p-8 text-center hover:border-[#7D6B3D] transition-colors"
+                  className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#D6D0BE] bg-white p-8 text-center transition-colors hover:border-[#7D6B3D]"
                 >
                   <FileText className="size-8 text-[#8C8782]" />
                   <div>
                     <p className="text-sm font-medium text-[#2D2926]">
-                      {loading ? "Reading file..." : "Click to select a .ged file"}
+                      {loading ? 'Reading file...' : 'Click to select a .ged file'}
                     </p>
-                    <p className="text-xs text-[#8C8782] mt-0.5">
-                      GEDCOM 5.5.1 format supported
-                    </p>
+                    <p className="mt-0.5 text-xs text-[#8C8782]">GEDCOM 5.5.1 format supported</p>
                   </div>
                   <input
                     ref={fileRef}
@@ -418,7 +444,8 @@ function ImportPage() {
                     <div>
                       <p className="font-medium">File parsed successfully!</p>
                       <p className="text-green-600">
-                        {result.person_count} individuals, {result.relationship_count} relationships found.
+                        {result.person_count} individuals, {result.relationship_count} relationships
+                        found.
                       </p>
                     </div>
                   </div>
@@ -435,7 +462,7 @@ function ImportPage() {
                     ) : (
                       <>
                         <Upload className="size-4" />
-                        Import to {selectedTree?.name ?? "Tree"}
+                        Import to {selectedTree?.name ?? 'Tree'}
                       </>
                     )}
                   </button>
@@ -446,5 +473,5 @@ function ImportPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

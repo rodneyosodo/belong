@@ -1,21 +1,17 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
-import { ArrowLeft } from "lucide-react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
-import type { FamilyNodeData } from "@/components/family-tree-node"
-import { personApi, relationshipApi, type Person, type Relationship } from "@/lib/api"
+import { createFileRoute, Link, useParams } from '@tanstack/react-router';
+import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui/components/card';
+import { ArrowLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-export const Route = createFileRoute("/person/$id")({
+import type { FamilyNodeData } from '@/components/family-tree-node';
+import { personApi, relationshipApi, type Person, type Relationship } from '@/lib/api';
+
+export const Route = createFileRoute('/person/$id')({
   component: PersonPage,
-})
+});
 
 function computeAge(dob?: string, dod?: string): string {
-  if (!dob) return "—";
+  if (!dob) return '—';
   const birth = new Date(dob);
   const end = dod ? new Date(dod) : new Date();
   let age = end.getFullYear() - birth.getFullYear();
@@ -60,19 +56,19 @@ function PersonPage() {
             const other = personMap.get(otherId);
             if (!other) continue;
 
-            if (r.type === "spouse") {
-              relList.push({ rel: "Spouse", name: personLabel(other) });
-            } else if (r.type === "parent") {
+            if (r.type === 'spouse') {
+              relList.push({ rel: 'Spouse', name: personLabel(other) });
+            } else if (r.type === 'parent') {
               if (r.person_a_id === id) {
-                relList.push({ rel: "Child", name: personLabel(other) });
+                relList.push({ rel: 'Child', name: personLabel(other) });
               } else {
-                relList.push({ rel: "Parent", name: personLabel(other) });
+                relList.push({ rel: 'Parent', name: personLabel(other) });
               }
-            } else if (r.type === "child") {
+            } else if (r.type === 'child') {
               if (r.person_a_id === id) {
-                relList.push({ rel: "Child", name: personLabel(other) });
+                relList.push({ rel: 'Child', name: personLabel(other) });
               } else {
-                relList.push({ rel: "Parent", name: personLabel(other) });
+                relList.push({ rel: 'Parent', name: personLabel(other) });
               }
             } else {
               relList.push({ rel: r.type, name: personLabel(other) });
@@ -81,7 +77,7 @@ function PersonPage() {
         }
         setRelations(relList);
       } catch (err) {
-        console.error("Failed to load person:", err);
+        console.error('Failed to load person:', err);
       } finally {
         setLoading(false);
       }
@@ -89,7 +85,9 @@ function PersonPage() {
   }, [id]);
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center text-[#8C8782]">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center text-[#8C8782]">Loading...</div>
+    );
   }
 
   if (!person) {
@@ -100,7 +98,7 @@ function PersonPage() {
     label: personLabel(person),
     firstName: person.first_name,
     lastName: person.last_name,
-    gender: (person.gender as FamilyNodeData["gender"]) || undefined,
+    gender: (person.gender as FamilyNodeData['gender']) || undefined,
     dateOfBirth: person.date_of_birth || undefined,
     dateOfDeath: person.date_of_death || undefined,
     photo: person.avatar_url || undefined,
@@ -108,7 +106,12 @@ function PersonPage() {
   };
 
   const age = computeAge(data.dateOfBirth, data.dateOfDeath);
-  const initials = data.label!.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+  const initials = data
+    .label!.split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div className="min-h-screen bg-[#F5F2E9]">
@@ -116,7 +119,7 @@ function PersonPage() {
         <Link
           to="/tree/$id"
           params={{ id: person.tree_id }}
-          className="inline-flex items-center gap-1.5 text-xs text-[#8C8782] hover:text-[#2D2926] mb-6"
+          className="mb-6 inline-flex items-center gap-1.5 text-xs text-[#8C8782] hover:text-[#2D2926]"
         >
           <ArrowLeft className="size-3.5" />
           Back to tree
@@ -128,7 +131,7 @@ function PersonPage() {
               <img
                 src={data.photo}
                 alt=""
-                className="size-16 rounded-full object-cover border border-[#D6D0BE]"
+                className="size-16 rounded-full border border-[#D6D0BE] object-cover"
               />
             ) : (
               <div className="flex size-16 items-center justify-center rounded-full bg-[#7D6B3D] text-lg font-bold text-white">
@@ -140,9 +143,11 @@ function PersonPage() {
                 {data.label}
               </h1>
               <div className="mt-1 flex items-center gap-3 text-sm text-[#5E5954]">
-                <span>{data.dateOfBirth || "?"} — {data.dateOfDeath || "Present"}</span>
+                <span>
+                  {data.dateOfBirth || '?'} — {data.dateOfDeath || 'Present'}
+                </span>
                 <span className="text-[#D6D0BE]">|</span>
-                <span className="capitalize">{data.gender || "—"}</span>
+                <span className="capitalize">{data.gender || '—'}</span>
                 <span className="text-[#D6D0BE]">|</span>
                 <span>Age: {age}</span>
               </div>
@@ -159,7 +164,7 @@ function PersonPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-relaxed text-[#5E5954]">
-                {data.notes || "No biography available."}
+                {data.notes || 'No biography available.'}
               </p>
             </CardContent>
           </Card>
@@ -174,7 +179,7 @@ function PersonPage() {
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-[#8C8782]">Gender</dt>
-                  <dd className="font-medium text-[#2D2926] capitalize">{data.gender || "—"}</dd>
+                  <dd className="font-medium text-[#2D2926] capitalize">{data.gender || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-[#8C8782]">Age</dt>
@@ -182,11 +187,11 @@ function PersonPage() {
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-[#8C8782]">Birth</dt>
-                  <dd className="font-medium text-[#2D2926]">{data.dateOfBirth || "—"}</dd>
+                  <dd className="font-medium text-[#2D2926]">{data.dateOfBirth || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-[#8C8782]">Death</dt>
-                  <dd className="font-medium text-[#2D2926]">{data.dateOfDeath || "—"}</dd>
+                  <dd className="font-medium text-[#2D2926]">{data.dateOfDeath || '—'}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-[#8C8782]">Birth Place</dt>
@@ -231,9 +236,9 @@ function PersonPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="relative pl-4 before:absolute before:left-0 before:top-1 before:h-[calc(100%-8px)] before:w-0.5 before:bg-[#D6D0BE]">
+              <div className="relative pl-4 before:absolute before:top-1 before:left-0 before:h-[calc(100%-8px)] before:w-0.5 before:bg-[#D6D0BE]">
                 <div className="mb-3">
-                  <p className="text-xs font-medium text-[#7D6B3D]">{data.dateOfBirth || "?"}</p>
+                  <p className="text-xs font-medium text-[#7D6B3D]">{data.dateOfBirth || '?'}</p>
                   <p className="text-sm text-[#2D2926]">Born</p>
                 </div>
                 {data.dateOfDeath ? (
@@ -253,5 +258,5 @@ function PersonPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

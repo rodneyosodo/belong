@@ -171,7 +171,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<'div'>) 
               </div>
             </div>
             <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-[13px] font-medium text-[#7D6B3D] hover:underline">
+              <Link
+                to="/forgot-password"
+                className="text-[13px] font-medium text-[#7D6B3D] hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>

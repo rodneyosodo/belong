@@ -99,9 +99,7 @@ export function ResetPasswordForm({
             <h2 className="font-['Playfair_Display'] text-[28px] font-semibold text-[#2D2926]">
               Set new password
             </h2>
-            <p className="text-sm text-[#5E5954]">
-              Must be at least 8 characters.
-            </p>
+            <p className="text-sm text-[#5E5954]">Must be at least 8 characters.</p>
           </div>
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>

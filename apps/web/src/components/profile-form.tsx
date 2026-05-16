@@ -1,5 +1,13 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Avatar, AvatarFallback, AvatarImage } from '@workspace/ui/components/avatar';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@workspace/ui/components/breadcrumb';
 import { Button } from '@workspace/ui/components/button';
 import {
   Card,
@@ -11,19 +19,8 @@ import {
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from '@workspace/ui/components/sidebar';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@workspace/ui/components/breadcrumb';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { ToggleGroup, ToggleGroupItem } from '@workspace/ui/components/toggle-group';
 import {
   Eye,
   EyeOff,
@@ -42,7 +39,6 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { useTheme } from '@/components/theme-provider';
 import { authClient } from '@/lib/auth-client';
 import { env } from '@/lib/env';
-import { ToggleGroup, ToggleGroupItem } from '@workspace/ui/components/toggle-group';
 
 export function ProfileForm() {
   const { data: session, isPending, error, refetch } = authClient.useSession();
@@ -194,16 +190,11 @@ export function ProfileForm() {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">
-                    Lineage
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="/">Lineage</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
@@ -245,12 +236,7 @@ export function ProfileForm() {
               <CardContent className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    defaultValue={user.name}
-                  />
+                  <Input id="name" name="name" type="text" defaultValue={user.name} />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="avatar">Avatar</Label>
@@ -268,9 +254,7 @@ export function ProfileForm() {
                       )}
                       Choose file
                     </Button>
-                    <span className="text-sm text-muted-foreground">
-                      PNG, JPG up to 5MB
-                    </span>
+                    <span className="text-muted-foreground text-sm">PNG, JPG up to 5MB</span>
                   </div>
                   <input
                     id="avatar-input"
@@ -280,11 +264,7 @@ export function ProfileForm() {
                     onChange={handleFileSelect}
                   />
                 </div>
-                <Button
-                  type="submit"
-                  disabled={profileLoading}
-                  className="self-start"
-                >
+                <Button type="submit" disabled={profileLoading} className="self-start">
                   {profileLoading ? (
                     <Loader2 className="mr-2 size-4 animate-spin" />
                   ) : (
@@ -300,7 +280,9 @@ export function ProfileForm() {
             <Card>
               <CardHeader>
                 <CardTitle>Change password</CardTitle>
-                <CardDescription>Update your password. You&apos;ll need your current password.</CardDescription>
+                <CardDescription>
+                  Update your password. You&apos;ll need your current password.
+                </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -316,7 +298,7 @@ export function ProfileForm() {
                     <button
                       type="button"
                       onClick={() => setShowCurrent((s) => !s)}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                     >
                       {showCurrent ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
@@ -336,7 +318,7 @@ export function ProfileForm() {
                     <button
                       type="button"
                       onClick={() => setShowNew((s) => !s)}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                     >
                       {showNew ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
@@ -356,17 +338,13 @@ export function ProfileForm() {
                     <button
                       type="button"
                       onClick={() => setShowConfirm((s) => !s)}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
                     >
                       {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </button>
                   </div>
                 </div>
-                <Button
-                  type="submit"
-                  disabled={pwLoading}
-                  className="self-start"
-                >
+                <Button type="submit" disabled={pwLoading} className="self-start">
                   {pwLoading && <Loader2 className="mr-2 size-4 animate-spin" />}
                   Change password
                 </Button>
@@ -410,10 +388,7 @@ export function ProfileForm() {
               <CardDescription>Sign out of your account.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button
-                variant="outline"
-                onClick={handleSignOut}
-              >
+              <Button variant="outline" onClick={handleSignOut}>
                 <LogOutIcon className="mr-2 size-4" />
                 Sign out
               </Button>

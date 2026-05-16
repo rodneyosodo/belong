@@ -1,11 +1,11 @@
-import { betterAuth } from "better-auth";
-import { username } from "better-auth/plugins";
-import { anonymous } from "better-auth/plugins";
-import { bearer } from "better-auth/plugins";
-import { organization } from "better-auth/plugins";
-import nodemailer from "nodemailer";
+import { betterAuth } from 'better-auth';
+import { username } from 'better-auth/plugins';
+import { anonymous } from 'better-auth/plugins';
+import { bearer } from 'better-auth/plugins';
+import { organization } from 'better-auth/plugins';
+import nodemailer from 'nodemailer';
 
-import { pool } from "./db";
+import { pool } from './db';
 
 const smtpHost = Bun.env.BELONG_SMTP_HOST as string;
 const smtpUser = Bun.env.BELONG_SMTP_USER as string;
@@ -16,7 +16,7 @@ const transporter = hasSmtpConfig
   ? nodemailer.createTransport({
       host: smtpHost,
       port: parseInt(Bun.env.BELONG_SMTP_PORT as string) || 465,
-      secure: (Bun.env.BELONG_SMTP_PORT as string) === "465" || true,
+      secure: (Bun.env.BELONG_SMTP_PORT as string) === '465' || true,
       auth: { user: smtpUser, pass: smtpPass },
     })
   : null;
@@ -35,19 +35,17 @@ if (githubId && githubSecret) {
   socialProviders.github = { clientId: githubId, clientSecret: githubSecret };
 }
 
-const frontendUrl = (Bun.env.BELONG_FRONTEND_URL as string) || "http://localhost:5091";
+const frontendUrl = (Bun.env.BELONG_FRONTEND_URL as string) || 'http://localhost:5091';
 
 export const auth = betterAuth({
-  baseURL: (Bun.env.BETTER_AUTH_URL as string) || "http://localhost:5090",
-  trustedOrigins: [
-    frontendUrl,
-  ],
+  baseURL: (Bun.env.BETTER_AUTH_URL as string) || 'http://localhost:5090',
+  trustedOrigins: [frontendUrl],
   database: pool,
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url }) => {
       if (!transporter) {
-        console.log("SMTP not configured. Password reset requested for:", {
+        console.log('SMTP not configured. Password reset requested for:', {
           email: user.email,
           url,
         });
@@ -57,7 +55,7 @@ export const auth = betterAuth({
         await transporter.sendMail({
           from: Bun.env.BELONG_SMTP_FROM as string,
           to: user.email,
-          subject: "Reset your Belong password",
+          subject: 'Reset your Belong password',
           text: `Reset your password here: ${url}`,
           html: `
             <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
@@ -76,10 +74,7 @@ export const auth = betterAuth({
         });
         console.log(`Password reset email sent to ${user.email}`);
       } catch (err) {
-        console.error(
-          `Failed to send password reset email to ${user.email}:`,
-          err,
-        );
+        console.error(`Failed to send password reset email to ${user.email}:`, err);
       }
     },
   },
@@ -92,19 +87,19 @@ export const auth = betterAuth({
         organization: {
           additionalFields: {
             description: {
-              type: "string",
-              defaultValue: "",
+              type: 'string',
+              defaultValue: '',
               input: true,
               required: false,
             },
             coverImage: {
-              type: "string",
-              defaultValue: "",
+              type: 'string',
+              defaultValue: '',
               input: true,
               required: false,
             },
             isPublic: {
-              type: "boolean",
+              type: 'boolean',
               defaultValue: false,
               input: true,
               required: false,
@@ -114,7 +109,7 @@ export const auth = betterAuth({
       },
       async sendInvitationEmail(data) {
         if (!transporter) {
-          console.log("SMTP not configured. Invitation for:", {
+          console.log('SMTP not configured. Invitation for:', {
             email: data.email,
             org: data.organization.name,
             id: data.id,

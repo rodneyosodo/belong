@@ -10,64 +10,18 @@ import {
 } from '@workspace/ui/components/dialog';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { HeartIcon, BabyIcon, ArrowUpIcon, UserPlusIcon } from 'lucide-react';
+import { PencilIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import type { ContextMenuAction } from './node-context-menu';
+import type { PersonFormData } from './add-person-dialog';
+import type { FamilyNodeData } from './family-tree-node';
 
-export type PersonFormData = {
-  firstName: string;
-  lastName: string;
-  gender: 'male' | 'female';
-  dateOfBirth?: string;
-  dateOfDeath?: string;
-  notes?: string;
-  photo?: string;
-  relationshipType?: string;
-};
-
-interface AddPersonDialogProps {
+interface EditPersonDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  action: ContextMenuAction;
+  personData: FamilyNodeData | null;
   onConfirm: (data: PersonFormData) => void;
 }
-
-const actionMeta: Record<
-  ContextMenuAction,
-  { icon: typeof HeartIcon; title: string; description: string }
-> = {
-  add: {
-    icon: UserPlusIcon,
-    title: 'Add Member',
-    description: 'Add a new family member',
-  },
-  spouse: {
-    icon: HeartIcon,
-    title: 'Add Spouse',
-    description: 'Add a spouse to this family member',
-  },
-  child: {
-    icon: BabyIcon,
-    title: 'Add Child',
-    description: 'Add a child to this family member',
-  },
-  parent: {
-    icon: ArrowUpIcon,
-    title: 'Add Parent',
-    description: 'Add a parent to this family member',
-  },
-  sibling: {
-    icon: UserPlusIcon,
-    title: 'Add Sibling',
-    description: 'Add a sibling to this family member',
-  },
-  delete: {
-    icon: HeartIcon,
-    title: '',
-    description: '',
-  },
-};
 
 const relationshipTypes = [
   'Biological',
@@ -79,7 +33,12 @@ const relationshipTypes = [
   'Other',
 ];
 
-export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPersonDialogProps) {
+export function EditPersonDialog({
+  open,
+  onOpenChange,
+  personData,
+  onConfirm,
+}: EditPersonDialogProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState<'male' | 'female'>('male');
@@ -90,20 +49,17 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
   const [relationshipType, setRelationshipType] = useState('Biological');
 
   useEffect(() => {
-    if (open) {
-      setFirstName('');
-      setLastName('');
-      setGender('male');
-      setDateOfBirth('');
-      setDateOfDeath('');
-      setNotes('');
-      setPhoto('');
-      setRelationshipType('Biological');
+    if (open && personData) {
+      setFirstName(personData.firstName || '');
+      setLastName(personData.lastName || '');
+      setGender(personData.gender || 'male');
+      setDateOfBirth(personData.dateOfBirth || '');
+      setDateOfDeath(personData.dateOfDeath || '');
+      setNotes(personData.notes || '');
+      setPhoto(personData.photo || '');
+      setRelationshipType(personData.relationshipType || 'Biological');
     }
-  }, [open]);
-
-  const meta = actionMeta[action];
-  const Icon = meta.icon;
+  }, [open, personData]);
 
   const handleConfirm = () => {
     if (!firstName.trim() || !lastName.trim()) return;
@@ -117,14 +73,6 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
       photo: photo.trim() || undefined,
       relationshipType,
     });
-    setFirstName('');
-    setLastName('');
-    setGender('male');
-    setDateOfBirth('');
-    setDateOfDeath('');
-    setNotes('');
-    setPhoto('');
-    setRelationshipType('Biological');
   };
 
   return (
@@ -132,14 +80,14 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl border-[#D6D0BE] bg-[#EDEAD8] p-0 sm:max-w-md">
         <DialogHeader className="flex flex-row items-center gap-3 border-b border-[#D6D0BE] p-5">
           <div className="flex size-9 items-center justify-center rounded-xl bg-[#7D6B3D]">
-            <Icon className="size-4 text-[#F5F2E9]" />
+            <PencilIcon className="size-4 text-[#F5F2E9]" />
           </div>
           <div>
             <DialogTitle className="font-['Playfair_Display'] text-lg font-semibold text-[#2D2926]">
-              {meta.title}
+              Edit Person
             </DialogTitle>
             <DialogDescription className="text-xs text-[#5E5954]">
-              {meta.description}
+              Update this family member&apos;s details
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -282,7 +230,7 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
             onClick={handleConfirm}
             className="h-9 rounded-lg bg-[#7D6B3D] px-4 text-sm font-semibold text-[#F5F2E9] hover:bg-[#6A5A32] disabled:opacity-50"
           >
-            Add
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>

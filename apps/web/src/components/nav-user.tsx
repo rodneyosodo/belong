@@ -1,9 +1,5 @@
-import { useNavigate } from "@tanstack/react-router";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@workspace/ui/components/avatar"
+import { useNavigate } from '@tanstack/react-router';
+import { Avatar, AvatarFallback, AvatarImage } from '@workspace/ui/components/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,47 +8,45 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu"
+} from '@workspace/ui/components/dropdown-menu';
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@workspace/ui/components/sidebar"
-import { ChevronsUpDownIcon, LogOutIcon, UserRoundIcon } from "lucide-react"
-import { toast } from "sonner";
+} from '@workspace/ui/components/sidebar';
+import { ChevronsUpDownIcon, LogOutIcon, UserRoundIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { authClient } from "@/lib/auth-client";
+import { authClient } from '@/lib/auth-client';
 
 export function NavUser({
   user,
 }: {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+  };
 }) {
-  const { isMobile } = useSidebar()
-  const navigate = useNavigate()
+  const { isMobile } = useSidebar();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    const { error } = await authClient.signOut()
+    const { error } = await authClient.signOut();
     if (error) {
-      toast.error(error.message ?? "Failed to sign out")
-      return
+      toast.error(error.message ?? 'Failed to sign out');
+      return;
     }
-    navigate({ to: "/login" })
-  }
+    navigate({ to: '/login' });
+  };
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
-            }
+            render={<SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />}
           >
             <Avatar>
               <AvatarImage src={user.avatar} alt={user.name} />
@@ -66,7 +60,7 @@ export function NavUser({
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
+            side={isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
@@ -86,7 +80,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+              <DropdownMenuItem onClick={() => navigate({ to: '/profile' })}>
                 <UserRoundIcon />
                 Profile
               </DropdownMenuItem>
@@ -100,5 +94,5 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  )
+  );
 }

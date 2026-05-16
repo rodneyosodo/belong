@@ -1,8 +1,8 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
-import { Toaster } from "@workspace/ui/components/sonner";
+import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+import { Toaster } from '@workspace/ui/components/sonner';
 
-import { authGuard } from "@/lib/auth-utils";
+import { authGuard } from '@/lib/auth-utils';
 
 const RootLayout = () => (
   <>

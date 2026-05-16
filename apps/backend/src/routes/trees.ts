@@ -1,18 +1,18 @@
-import { Elysia } from "elysia";
+import { Elysia } from 'elysia';
 
-import { pool } from "../lib/db";
-import { auth } from "../lib/auth";
+import { auth } from '../lib/auth';
+import { pool } from '../lib/db';
 
 async function getSession(context: { request: { headers: Headers } }) {
   return auth.api.getSession({ headers: context.request.headers });
 }
 
-export const treeRoutes = new Elysia({ prefix: "/api/trees" })
-  .get("/", async (context) => {
+export const treeRoutes = new Elysia({ prefix: '/api/trees' })
+  .get('/', async (context) => {
     const session = await getSession(context);
     if (!session?.user?.id) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const { rows: memberRows } = await pool.query(
@@ -20,10 +20,27 @@ export const treeRoutes = new Elysia({ prefix: "/api/trees" })
       [session.user.id],
     );
 
-    const orgMap = new Map<string, { name: string; slug: string; createdAt: string; description: string; coverImage: string; isPublic: boolean }>();
+    const orgMap = new Map<
+      string,
+      {
+        name: string;
+        slug: string;
+        createdAt: string;
+        description: string;
+        coverImage: string;
+        isPublic: boolean;
+      }
+    >();
     const roles = new Map<string, string>();
     for (const r of memberRows) {
-      orgMap.set(r.organizationId, { name: r.name, slug: r.slug, createdAt: r.createdAt, description: r.description ?? "", coverImage: r.coverImage ?? "", isPublic: r.isPublic ?? false });
+      orgMap.set(r.organizationId, {
+        name: r.name,
+        slug: r.slug,
+        createdAt: r.createdAt,
+        description: r.description ?? '',
+        coverImage: r.coverImage ?? '',
+        isPublic: r.isPublic ?? false,
+      });
       roles.set(r.organizationId, r.role);
     }
 
@@ -42,38 +59,38 @@ export const treeRoutes = new Elysia({ prefix: "/api/trees" })
           is_public: org.isPublic,
           created_at: org.createdAt,
           updated_at: org.createdAt,
-          person_count: rows[0]?.person_count ?? "0",
+          person_count: rows[0]?.person_count ?? '0',
         };
       }),
     );
 
-    const owned = withCounts.filter((t) => roles.get(t.id) === "owner");
-    const shared = withCounts.filter((t) => roles.get(t.id) && roles.get(t.id) !== "owner");
+    const owned = withCounts.filter((t) => roles.get(t.id) === 'owner');
+    const shared = withCounts.filter((t) => roles.get(t.id) && roles.get(t.id) !== 'owner');
 
     return { owned, shared };
   })
-  .post("/", async (context) => {
+  .post('/', async (context) => {
     const session = await getSession(context);
     if (!session?.user?.id) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const body = context.body as { name?: string; description?: string };
     const name = body?.name?.trim();
     if (!name) {
       context.set.status = 400;
-      return { error: "Tree name is required" };
+      return { error: 'Tree name is required' };
     }
 
-    const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString(36)}`;
+    const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
 
     const org = await auth.api.createOrganization({
       body: {
         name,
         slug,
-        description: body?.description?.trim() ?? "",
-        coverImage: "",
+        description: body?.description?.trim() ?? '',
+        coverImage: '',
         isPublic: false,
       },
       headers: context.request.headers,
@@ -83,15 +100,15 @@ export const treeRoutes = new Elysia({ prefix: "/api/trees" })
       id: org.id,
       name: org.name,
       slug: org.slug,
-      description: (org as any).description ?? "",
-      cover_image: (org as any).coverImage ?? "",
+      description: (org as any).description ?? '',
+      cover_image: (org as any).coverImage ?? '',
       is_public: (org as any).isPublic ?? false,
       created_at: org.createdAt,
       updated_at: org.createdAt,
-      person_count: "0",
+      person_count: '0',
     };
   })
-  .get("/:id", async (context) => {
+  .get('/:id', async (context) => {
     const session = await getSession(context);
     const treeId = (context.params as { id: string }).id;
 
@@ -110,7 +127,7 @@ export const treeRoutes = new Elysia({ prefix: "/api/trees" })
       );
       if (rows.length === 0) {
         context.set.status = 404;
-        return { error: "Tree not found" };
+        return { error: 'Tree not found' };
       }
       org = rows[0];
     }
@@ -118,14 +135,12 @@ export const treeRoutes = new Elysia({ prefix: "/api/trees" })
     if (!(org as any).isPublic) {
       if (!session?.user?.id) {
         context.set.status = 401;
-        return { error: "Unauthorized" };
+        return { error: 'Unauthorized' };
       }
-      const isMember = (org as any).members?.some(
-        (m: any) => m.userId === session.user!.id,
-      );
+      const isMember = (org as any).members?.some((m: any) => m.userId === session.user!.id);
       if (!isMember) {
         context.set.status = 403;
-        return { error: "Forbidden" };
+        return { error: 'Forbidden' };
       }
     }
 
@@ -142,20 +157,20 @@ export const treeRoutes = new Elysia({ prefix: "/api/trees" })
       id: org.id,
       name: org.name,
       slug: org.slug,
-      description: (org as any).description ?? "",
-      cover_image: (org as any).coverImage ?? "",
+      description: (org as any).description ?? '',
+      cover_image: (org as any).coverImage ?? '',
       is_public: (org as any).isPublic ?? false,
       created_at: org.createdAt,
       updated_at: org.createdAt,
-      person_count: personRows[0]?.person_count ?? "0",
-      user_role: member?.role ?? "viewer",
+      person_count: personRows[0]?.person_count ?? '0',
+      user_role: member?.role ?? 'viewer',
     };
   })
-  .put("/:id", async (context) => {
+  .put('/:id', async (context) => {
     const session = await getSession(context);
     if (!session?.user?.id) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const treeId = (context.params as { id: string }).id;
@@ -182,25 +197,25 @@ export const treeRoutes = new Elysia({ prefix: "/api/trees" })
 
     if (!org) {
       context.set.status = 404;
-      return { error: "Tree not found" };
+      return { error: 'Tree not found' };
     }
 
     return {
       id: org.id,
       name: org.name,
       slug: org.slug,
-      description: (org as any).description ?? "",
-      cover_image: (org as any).coverImage ?? "",
+      description: (org as any).description ?? '',
+      cover_image: (org as any).coverImage ?? '',
       is_public: (org as any).isPublic ?? false,
       created_at: org.createdAt,
       updated_at: org.createdAt,
     };
   })
-  .delete("/:id", async (context) => {
+  .delete('/:id', async (context) => {
     const session = await getSession(context);
     if (!session?.user?.id) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const treeId = (context.params as { id: string }).id;

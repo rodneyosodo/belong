@@ -1,7 +1,4 @@
-import { useState, useEffect, useRef } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { AppSidebar } from "@/components/app-sidebar";
-import { MembersPanel } from "@/components/members-panel";
+import { createFileRoute } from '@tanstack/react-router';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,34 +6,29 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@workspace/ui/components/breadcrumb";
-import { Separator } from "@workspace/ui/components/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@workspace/ui/components/sidebar";
+} from '@workspace/ui/components/breadcrumb';
+import { Button } from '@workspace/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@workspace/ui/components/card";
-import { Button } from "@workspace/ui/components/button";
-import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
-import { Loader2, SaveIcon, UploadIcon, Trash2Icon } from "lucide-react";
-import { toast } from "sonner";
-import { treeApi, uploadCoverImage, type Tree } from "@/lib/api";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@workspace/ui/components/tabs";
+} from '@workspace/ui/components/card';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
+import { Separator } from '@workspace/ui/components/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
+import { Loader2, SaveIcon, UploadIcon, Trash2Icon } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
-export const Route = createFileRoute("/tree/$id_/settings")({
+import { AppSidebar } from '@/components/app-sidebar';
+import { MembersPanel } from '@/components/members-panel';
+import { treeApi, uploadCoverImage, type Tree } from '@/lib/api';
+
+export const Route = createFileRoute('/tree/$id_/settings')({
   component: TreeSettingsPage,
 });
 
@@ -46,8 +38,8 @@ function TreeSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -60,7 +52,7 @@ function TreeSettingsPage() {
         setDescription(data.description);
         setIsPublic(data.is_public);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to load tree");
+        toast.error(err instanceof Error ? err.message : 'Failed to load tree');
       } finally {
         setLoading(false);
       }
@@ -77,12 +69,10 @@ function TreeSettingsPage() {
         is_public: isPublic,
       });
       setTree(updated);
-      toast.success("Settings saved");
-      window.dispatchEvent(new Event("trees-changed"));
+      toast.success('Settings saved');
+      window.dispatchEvent(new Event('trees-changed'));
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to save settings",
-      );
+      toast.error(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
       setSaving(false);
     }
@@ -94,14 +84,10 @@ function TreeSettingsPage() {
     setUploading(true);
     try {
       const result = await uploadCoverImage(id, file);
-      setTree((prev) =>
-        prev ? { ...prev, cover_image: result.cover_image } : prev,
-      );
-      toast.success("Cover image updated");
+      setTree((prev) => (prev ? { ...prev, cover_image: result.cover_image } : prev));
+      toast.success('Cover image updated');
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to upload cover",
-      );
+      toast.error(err instanceof Error ? err.message : 'Failed to upload cover');
     } finally {
       setUploading(false);
     }
@@ -111,10 +97,10 @@ function TreeSettingsPage() {
     if (!confirm(`Delete "${tree?.name}"? This cannot be undone.`)) return;
     try {
       await treeApi.delete(id);
-      toast.success("Tree deleted");
-      window.location.href = "/";
+      toast.success('Tree deleted');
+      window.location.href = '/';
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete tree");
+      toast.error(err instanceof Error ? err.message : 'Failed to delete tree');
     }
   };
 
@@ -144,7 +130,7 @@ function TreeSettingsPage() {
     );
   }
 
-  const isOwner = tree.user_role === "owner";
+  const isOwner = tree.user_role === 'owner';
 
   return (
     <SidebarProvider>
@@ -153,10 +139,7 @@ function TreeSettingsPage() {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
@@ -164,9 +147,7 @@ function TreeSettingsPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbLink href={`/tree/${id}`}>
-                    {tree.name}
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href={`/tree/${id}`}>{tree.name}</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
@@ -215,7 +196,7 @@ function TreeSettingsPage() {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Brief description of this family tree..."
                       rows={3}
-                      className="resize-none rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none"
+                      className="border-input bg-background resize-none rounded-lg border px-3 py-2.5 text-sm outline-none"
                       disabled={!isOwner}
                     />
                   </div>
@@ -245,7 +226,7 @@ function TreeSettingsPage() {
                         ) : (
                           <UploadIcon className="mr-2 size-4" />
                         )}
-                        {tree.cover_image ? "Change image" : "Upload image"}
+                        {tree.cover_image ? 'Change image' : 'Upload image'}
                       </Button>
                       <input
                         ref={fileRef}
@@ -271,11 +252,7 @@ function TreeSettingsPage() {
                     </span>
                   </div>
                   {isOwner && (
-                    <Button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="self-start"
-                    >
+                    <Button onClick={handleSave} disabled={saving} className="self-start">
                       {saving ? (
                         <Loader2 className="mr-2 size-4 animate-spin" />
                       ) : (

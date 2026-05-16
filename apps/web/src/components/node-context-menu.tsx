@@ -1,19 +1,21 @@
-import { useEffect, useRef } from "react";
 import {
   UserPlusIcon,
   HeartIcon,
   BabyIcon,
   ArrowUpIcon,
   Trash2Icon,
-} from "lucide-react";
+  PencilIcon,
+} from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 export type ContextMenuAction =
-  | "spouse"
-  | "child"
-  | "parent"
-  | "sibling"
-  | "delete"
-  | "add";
+  | 'spouse'
+  | 'child'
+  | 'parent'
+  | 'sibling'
+  | 'edit'
+  | 'delete'
+  | 'add';
 
 interface NodeContextMenuProps {
   x: number;
@@ -28,19 +30,14 @@ const actions: {
   label: string;
   icon: typeof UserPlusIcon;
 }[] = [
-  { action: "spouse", label: "Add Spouse", icon: HeartIcon },
-  { action: "child", label: "Add Child", icon: BabyIcon },
-  { action: "parent", label: "Add Parent", icon: ArrowUpIcon },
-  { action: "sibling", label: "Add Sibling", icon: UserPlusIcon },
+  { action: 'edit', label: 'Edit Person', icon: PencilIcon },
+  { action: 'spouse', label: 'Add Spouse', icon: HeartIcon },
+  { action: 'child', label: 'Add Child', icon: BabyIcon },
+  { action: 'parent', label: 'Add Parent', icon: ArrowUpIcon },
+  { action: 'sibling', label: 'Add Sibling', icon: UserPlusIcon },
 ];
 
-export function NodeContextMenu({
-  x,
-  y,
-  label,
-  onAction,
-  onClose,
-}: NodeContextMenuProps) {
+export function NodeContextMenu({ x, y, label, onAction, onClose }: NodeContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,13 +47,13 @@ export function NodeContextMenu({
       }
     };
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("keydown", handleKey);
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
     return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("keydown", handleKey);
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
     };
   }, [onClose]);
 
@@ -67,7 +64,7 @@ export function NodeContextMenu({
       className="absolute z-50 min-w-[180px] rounded-xl border border-[#D6D0BE] bg-[#F5F2E9] py-1.5 shadow-lg"
     >
       <div className="border-b border-[#D6D0BE] px-3 py-1.5">
-        <p className="text-xs font-medium text-[#5E5954] truncate">{label}</p>
+        <p className="truncate text-xs font-medium text-[#5E5954]">{label}</p>
       </div>
       <div className="py-1">
         {actions.map((item) => {
@@ -90,7 +87,7 @@ export function NodeContextMenu({
       <div className="border-t border-[#D6D0BE] py-1">
         <button
           onClick={() => {
-            onAction("delete");
+            onAction('delete');
             onClose();
           }}
           className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-red-700 hover:bg-[#E8E4D8]"

@@ -1,7 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
-import { createFileRoute } from "@tanstack/react-router"
-import { AppSidebar } from "@/components/app-sidebar"
-import { NewTreeDialog } from "@/components/new-tree-dialog"
+import { createFileRoute } from '@tanstack/react-router';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,73 +6,81 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@workspace/ui/components/breadcrumb"
-import { Separator } from "@workspace/ui/components/separator"
+} from '@workspace/ui/components/breadcrumb';
+import { Separator } from '@workspace/ui/components/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
 import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@workspace/ui/components/sidebar"
-import { UsersIcon, GitBranchIcon, UserPlusIcon, SearchIcon, PlusIcon, Trash2Icon, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import { treeApi, type Tree } from "@/lib/api"
+  UsersIcon,
+  GitBranchIcon,
+  UserPlusIcon,
+  SearchIcon,
+  PlusIcon,
+  Trash2Icon,
+  Loader2,
+} from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 
-export const Route = createFileRoute("/")({
+import { AppSidebar } from '@/components/app-sidebar';
+import { NewTreeDialog } from '@/components/new-tree-dialog';
+import { treeApi, type Tree } from '@/lib/api';
+
+export const Route = createFileRoute('/')({
   component: HomePage,
-})
+});
 
 function HomePage() {
-  const [newTreeOpen, setNewTreeOpen] = useState(false)
-  const [ownedTrees, setOwnedTrees] = useState<Tree[]>([])
-  const [sharedTrees, setSharedTrees] = useState<Tree[]>([])
-  const [loading, setLoading] = useState(true)
+  const [newTreeOpen, setNewTreeOpen] = useState(false);
+  const [ownedTrees, setOwnedTrees] = useState<Tree[]>([]);
+  const [sharedTrees, setSharedTrees] = useState<Tree[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const loadTrees = useCallback(async () => {
     try {
-      const data = await treeApi.list()
-      setOwnedTrees(data.owned)
-      setSharedTrees(data.shared)
+      const data = await treeApi.list();
+      setOwnedTrees(data.owned);
+      setSharedTrees(data.shared);
     } catch {
-      toast.error("Failed to load trees")
+      toast.error('Failed to load trees');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    loadTrees()
-  }, [loadTrees])
+    loadTrees();
+  }, [loadTrees]);
 
   const handleDeleteTree = async (id: string) => {
     try {
-      await treeApi.delete(id)
-      setOwnedTrees((prev) => prev.filter((t) => t.id !== id))
-      setSharedTrees((prev) => prev.filter((t) => t.id !== id))
-      toast.success("Tree deleted")
+      await treeApi.delete(id);
+      setOwnedTrees((prev) => prev.filter((t) => t.id !== id));
+      setSharedTrees((prev) => prev.filter((t) => t.id !== id));
+      toast.success('Tree deleted');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete tree")
+      toast.error(err instanceof Error ? err.message : 'Failed to delete tree');
     }
-  }
+  };
 
-  const allTrees = [...ownedTrees, ...sharedTrees]
-  const totalMembers = allTrees.reduce((sum, t) => sum + Number(t.member_count ?? 0), 0)
+  const allTrees = [...ownedTrees, ...sharedTrees];
+  const totalMembers = allTrees.reduce((sum, t) => sum + Number(t.member_count ?? 0), 0);
 
   const stats = [
-    { value: String(allTrees.length), label: "Family Trees", icon: GitBranchIcon },
-    { value: String(totalMembers), label: "Total Members", icon: UsersIcon },
-    { value: String(sharedTrees.length), label: "Shared with Me", icon: UserPlusIcon },
-  ]
+    { value: String(allTrees.length), label: 'Family Trees', icon: GitBranchIcon },
+    { value: String(totalMembers), label: 'Total Members', icon: UsersIcon },
+    { value: String(sharedTrees.length), label: 'Shared with Me', icon: UserPlusIcon },
+  ];
 
   const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 60) return `Updated ${mins}m ago`
-    const hours = Math.floor(mins / 60)
-    if (hours < 24) return `Updated ${hours}h ago`
-    const days = Math.floor(hours / 24)
-    if (days < 7) return `Updated ${days}d ago`
-    return `Updated ${Math.floor(days / 7)}w ago`
-  }
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `Updated ${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `Updated ${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `Updated ${days}d ago`;
+    return `Updated ${Math.floor(days / 7)}w ago`;
+  };
 
   return (
     <SidebarProvider>
@@ -84,16 +89,11 @@ function HomePage() {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">
-                    Lineage
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="/">Lineage</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
@@ -107,7 +107,7 @@ function HomePage() {
               <SearchIcon className="absolute left-3 size-4 text-[#8C8782]" />
               <input
                 placeholder="Search trees..."
-                className="h-9 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] pl-9 pr-4 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
+                className="h-9 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] pr-4 pl-9 text-sm text-[#2D2926] outline-none placeholder:text-[#8C8782]"
               />
             </div>
             <button
@@ -122,7 +122,7 @@ function HomePage() {
         <div className="flex flex-1 flex-col gap-6 p-6">
           <div className="grid gap-4 md:grid-cols-3">
             {stats.map((stat) => {
-              const Icon = stat.icon
+              const Icon = stat.icon;
               return (
                 <div
                   key={stat.label}
@@ -131,14 +131,14 @@ function HomePage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-mono text-3xl font-semibold text-[#2D2926]">
-                        {loading ? "—" : stat.value}
+                        {loading ? '—' : stat.value}
                       </p>
                       <p className="mt-1 text-sm text-[#5E5954]">{stat.label}</p>
                     </div>
                     <Icon className="size-5 text-[#7D6B3D]/60" />
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
 
@@ -169,7 +169,15 @@ function HomePage() {
                   <a href={`/tree/${tree.id}`} className="block">
                     <div
                       className="flex h-28 items-center justify-center bg-[#E8E4D8]"
-                      style={tree.cover_image ? { backgroundImage: `url(${tree.cover_image})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+                      style={
+                        tree.cover_image
+                          ? {
+                              backgroundImage: `url(${tree.cover_image})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                            }
+                          : undefined
+                      }
                     >
                       {!tree.cover_image && <GitBranchIcon className="size-10 text-[#7D6B3D]" />}
                     </div>
@@ -178,7 +186,7 @@ function HomePage() {
                         {tree.name}
                       </h3>
                       {tree.description && (
-                        <p className="text-sm leading-relaxed text-[#5E5954] line-clamp-2">
+                        <p className="line-clamp-2 text-sm leading-relaxed text-[#5E5954]">
                           {tree.description}
                         </p>
                       )}
@@ -193,12 +201,12 @@ function HomePage() {
                   </a>
                   <button
                     onClick={(e) => {
-                      e.preventDefault()
+                      e.preventDefault();
                       if (confirm(`Delete "${tree.name}"? This cannot be undone.`)) {
-                        handleDeleteTree(tree.id)
+                        handleDeleteTree(tree.id);
                       }
                     }}
-                    className="absolute top-2 right-2 hidden items-center justify-center rounded-lg bg-white/80 p-1.5 text-[#8C8782] opacity-0 backdrop-blur-sm transition-opacity hover:text-red-500 group-hover:flex group-hover:opacity-100"
+                    className="absolute top-2 right-2 hidden items-center justify-center rounded-lg bg-white/80 p-1.5 text-[#8C8782] opacity-0 backdrop-blur-sm transition-opacity group-hover:flex group-hover:opacity-100 hover:text-red-500"
                   >
                     <Trash2Icon className="size-4" />
                   </button>
@@ -212,7 +220,15 @@ function HomePage() {
                   <a href={`/tree/${tree.id}`} className="block">
                     <div
                       className="flex h-28 items-center justify-center bg-[#C4B896]"
-                      style={tree.cover_image ? { backgroundImage: `url(${tree.cover_image})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+                      style={
+                        tree.cover_image
+                          ? {
+                              backgroundImage: `url(${tree.cover_image})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                            }
+                          : undefined
+                      }
                     >
                       {!tree.cover_image && <GitBranchIcon className="size-10 text-[#7D6B3D]" />}
                     </div>
@@ -221,7 +237,7 @@ function HomePage() {
                         {tree.name}
                       </h3>
                       {tree.description && (
-                        <p className="text-sm leading-relaxed text-[#5E5954] line-clamp-2">
+                        <p className="line-clamp-2 text-sm leading-relaxed text-[#5E5954]">
                           {tree.description}
                         </p>
                       )}
@@ -247,5 +263,5 @@ function HomePage() {
       </SidebarInset>
       <NewTreeDialog open={newTreeOpen} onOpenChange={setNewTreeOpen} onCreated={loadTrees} />
     </SidebarProvider>
-  )
+  );
 }

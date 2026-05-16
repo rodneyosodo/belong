@@ -1,7 +1,7 @@
-import { Elysia } from "elysia";
+import { Elysia } from 'elysia';
 
-import { pool } from "../lib/db";
-import { auth } from "../lib/auth";
+import { auth } from '../lib/auth';
+import { pool } from '../lib/db';
 
 async function getSession(context: { request: { headers: Headers } }) {
   return auth.api.getSession({ headers: context.request.headers });
@@ -21,9 +21,7 @@ async function checkAccess(
     });
     if (!org) return null;
 
-    const isMember = (org as any).members?.some(
-      (m: any) => m.userId === session.user!.id,
-    );
+    const isMember = (org as any).members?.some((m: any) => m.userId === session.user!.id);
     if (!isMember && !(org as any).isPublic) return null;
 
     return { session, org, isMember };
@@ -31,22 +29,21 @@ async function checkAccess(
 
   if (requireWrite) return null;
 
-  const { rows } = await pool.query(
-    `SELECT "isPublic" FROM organization WHERE id = $1`,
-    [organizationId],
-  );
+  const { rows } = await pool.query(`SELECT "isPublic" FROM organization WHERE id = $1`, [
+    organizationId,
+  ]);
   if (rows.length === 0 || !rows[0].isPublic) return null;
 
   return { session: null, org: null, isMember: false };
 }
 
-export const personRoutes = new Elysia({ prefix: "/api/trees" })
-  .get("/:id/persons", async (context) => {
+export const personRoutes = new Elysia({ prefix: '/api/trees' })
+  .get('/:id/persons', async (context) => {
     const treeId = (context.params as { id: string }).id;
     const result = await checkAccess(context, treeId, false);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const { rows } = await pool.query(
@@ -70,12 +67,12 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
       updated_at: r.updated_at,
     }));
   })
-  .post("/:id/persons", async (context) => {
+  .post('/:id/persons', async (context) => {
     const treeId = (context.params as { id: string }).id;
     const result = await checkAccess(context, treeId, true);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const body = context.body as {
@@ -94,13 +91,13 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
       `INSERT INTO persons (organization_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         treeId,
-        body.first_name ?? "",
-        body.last_name ?? "",
-        body.gender ?? "",
-        body.date_of_birth ?? "",
-        body.date_of_death ?? "",
-        body.bio ?? "",
-        body.avatar_url ?? "",
+        body.first_name ?? '',
+        body.last_name ?? '',
+        body.gender ?? '',
+        body.date_of_birth ?? '',
+        body.date_of_death ?? '',
+        body.bio ?? '',
+        body.avatar_url ?? '',
         body.is_deceased ?? false,
         JSON.stringify(body.metadata ?? {}),
       ],
@@ -123,12 +120,12 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
       updated_at: r.updated_at,
     };
   })
-  .put("/:id/persons/:personId", async (context) => {
+  .put('/:id/persons/:personId', async (context) => {
     const { id: treeId, personId } = context.params as { id: string; personId: string };
     const result = await checkAccess(context, treeId, true);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const body = context.body as {
@@ -148,14 +145,14 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
     let idx = 1;
 
     for (const [key, col] of Object.entries({
-      first_name: "first_name",
-      last_name: "last_name",
-      gender: "gender",
-      date_of_birth: "birth_date",
-      date_of_death: "death_date",
-      bio: "bio",
-      avatar_url: "avatar_url",
-      is_deceased: "is_deceased",
+      first_name: 'first_name',
+      last_name: 'last_name',
+      gender: 'gender',
+      date_of_birth: 'birth_date',
+      date_of_death: 'death_date',
+      bio: 'bio',
+      avatar_url: 'avatar_url',
+      is_deceased: 'is_deceased',
     })) {
       if ((body as any)[key] !== undefined) {
         sets.push(`${col} = $${idx++}`);
@@ -170,20 +167,20 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
 
     if (sets.length === 0) {
       context.set.status = 400;
-      return { error: "No fields to update" };
+      return { error: 'No fields to update' };
     }
 
     sets.push(`updated_at = CURRENT_TIMESTAMP`);
     values.push(personId, treeId);
 
     const { rows } = await pool.query(
-      `UPDATE persons SET ${sets.join(", ")} WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
+      `UPDATE persons SET ${sets.join(', ')} WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
       values,
     );
 
     if (rows.length === 0) {
       context.set.status = 404;
-      return { error: "Person not found" };
+      return { error: 'Person not found' };
     }
 
     const r = rows[0];
@@ -203,27 +200,27 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
       updated_at: r.updated_at,
     };
   })
-  .delete("/:id/persons/:personId", async (context) => {
+  .delete('/:id/persons/:personId', async (context) => {
     const { id: treeId, personId } = context.params as { id: string; personId: string };
     const result = await checkAccess(context, treeId, true);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
-    await pool.query(
-      `DELETE FROM persons WHERE id = $1 AND organization_id = $2`,
-      [personId, treeId],
-    );
+    await pool.query(`DELETE FROM persons WHERE id = $1 AND organization_id = $2`, [
+      personId,
+      treeId,
+    ]);
 
     return { success: true };
   })
-  .get("/:id/relationships", async (context) => {
+  .get('/:id/relationships', async (context) => {
     const treeId = (context.params as { id: string }).id;
     const result = await checkAccess(context, treeId, false);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const { rows } = await pool.query(
@@ -241,12 +238,12 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
       created_at: r.created_at,
     }));
   })
-  .post("/:id/relationships", async (context) => {
+  .post('/:id/relationships', async (context) => {
     const treeId = (context.params as { id: string }).id;
     const result = await checkAccess(context, treeId, true);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const body = context.body as {
@@ -258,18 +255,12 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
 
     if (!body.person_a_id || !body.person_b_id || !body.type) {
       context.set.status = 400;
-      return { error: "person_a_id, person_b_id, and type are required" };
+      return { error: 'person_a_id, person_b_id, and type are required' };
     }
 
     const { rows } = await pool.query(
       `INSERT INTO relationships (organization_id, person_a_id, person_b_id, type, metadata) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [
-        treeId,
-        body.person_a_id,
-        body.person_b_id,
-        body.type,
-        JSON.stringify(body.metadata ?? {}),
-      ],
+      [treeId, body.person_a_id, body.person_b_id, body.type, JSON.stringify(body.metadata ?? {})],
     );
 
     const r = rows[0];
@@ -283,42 +274,49 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
       created_at: r.created_at,
     };
   })
-  .delete("/:id/relationships/:relationshipId", async (context) => {
+  .delete('/:id/relationships/:relationshipId', async (context) => {
     const { id: treeId, relationshipId } = context.params as { id: string; relationshipId: string };
     const result = await checkAccess(context, treeId, true);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
-    await pool.query(
-      `DELETE FROM relationships WHERE id = $1 AND organization_id = $2`,
-      [relationshipId, treeId],
-    );
+    await pool.query(`DELETE FROM relationships WHERE id = $1 AND organization_id = $2`, [
+      relationshipId,
+      treeId,
+    ]);
 
     return { success: true };
   })
-  .post("/:id/import", async (context) => {
+  .post('/:id/import', async (context) => {
     const treeId = (context.params as { id: string }).id;
     const result = await checkAccess(context, treeId, true);
     if (!result) {
       context.set.status = 401;
-      return { error: "Unauthorized" };
+      return { error: 'Unauthorized' };
     }
 
     const body = context.body as {
-      persons: { first_name: string; last_name: string; gender: string; date_of_birth: string; date_of_death: string; metadata?: any }[];
+      persons: {
+        first_name: string;
+        last_name: string;
+        gender: string;
+        date_of_birth: string;
+        date_of_death: string;
+        metadata?: any;
+      }[];
       relationships: { person_a_id: number; person_b_id: number; type: string }[];
     };
 
     if (!body.persons?.length) {
       context.set.status = 400;
-      return { error: "No persons to import" };
+      return { error: 'No persons to import' };
     }
 
     const client = await pool.connect();
     try {
-      await client.query("begin");
+      await client.query('begin');
 
       const personIds: string[] = [];
       for (const p of body.persons) {
@@ -326,14 +324,14 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
           `INSERT INTO persons (organization_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
           [
             treeId,
-            p.first_name ?? "",
-            p.last_name ?? "",
-            p.gender ?? "",
-            p.date_of_birth ?? "",
-            p.date_of_death ?? "",
-            "",
-            "",
-            !!(p.date_of_death),
+            p.first_name ?? '',
+            p.last_name ?? '',
+            p.gender ?? '',
+            p.date_of_birth ?? '',
+            p.date_of_death ?? '',
+            '',
+            '',
+            !!p.date_of_death,
             JSON.stringify(p.metadata ?? {}),
           ],
         );
@@ -350,10 +348,10 @@ export const personRoutes = new Elysia({ prefix: "/api/trees" })
         );
       }
 
-      await client.query("commit");
+      await client.query('commit');
       return { success: true, person_count: personIds.length };
     } catch (err) {
-      await client.query("rollback").catch(() => {});
+      await client.query('rollback').catch(() => {});
       throw err;
     } finally {
       client.release();

@@ -34,9 +34,7 @@ export async function runMigrations() {
     `create table if not exists "${completedTable}" ("name" text primary key, "run_at" timestamptz not null default current_timestamp)`,
   );
 
-  const { rows: completed } = await pool.query(
-    `select "name" from "${completedTable}"`,
-  );
+  const { rows: completed } = await pool.query(`select "name" from "${completedTable}"`);
   const completedNames = new Set(completed.map((r: { name: string }) => r.name));
 
   const migrations = loadMigrations();

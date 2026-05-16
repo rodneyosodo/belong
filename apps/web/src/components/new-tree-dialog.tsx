@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useNavigate } from '@tanstack/react-router';
+import { Button } from '@workspace/ui/components/button';
 import {
   Dialog,
   DialogContent,
@@ -7,47 +8,47 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@workspace/ui/components/dialog"
-import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
-import { GitBranchIcon, UploadIcon, FileTextIcon, Loader2 } from "lucide-react"
-import { treeApi } from "@/lib/api"
-import { toast } from "sonner"
-import { useNavigate } from "@tanstack/react-router"
+} from '@workspace/ui/components/dialog';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
+import { GitBranchIcon, UploadIcon, FileTextIcon, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+
+import { treeApi } from '@/lib/api';
 
 interface NewTreeDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onCreated?: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated?: () => void;
 }
 
 export function NewTreeDialog({ open, onOpenChange, onCreated }: NewTreeDialogProps) {
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [method, setMethod] = useState<"scratch" | "gedcom">("scratch")
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [method, setMethod] = useState<'scratch' | 'gedcom'>('scratch');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleCreate = async () => {
-    if (!name.trim()) return
-    setLoading(true)
+    if (!name.trim()) return;
+    setLoading(true);
     try {
-      const tree = await treeApi.create({ name: name.trim(), description: description.trim() })
-      toast.success(`"${tree.name}" created`)
-      setName("")
-      setDescription("")
-      setMethod("scratch")
-      onOpenChange(false)
-      window.dispatchEvent(new Event("trees-changed"))
-      onCreated?.()
-      navigate({ to: "/tree/$id", params: { id: tree.id } })
+      const tree = await treeApi.create({ name: name.trim(), description: description.trim() });
+      toast.success(`"${tree.name}" created`);
+      setName('');
+      setDescription('');
+      setMethod('scratch');
+      onOpenChange(false);
+      window.dispatchEvent(new Event('trees-changed'));
+      onCreated?.();
+      navigate({ to: '/tree/$id', params: { id: tree.id } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create tree")
+      toast.error(err instanceof Error ? err.message : 'Failed to create tree');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,50 +69,48 @@ export function NewTreeDialog({ open, onOpenChange, onCreated }: NewTreeDialogPr
 
         <div className="flex flex-col gap-5 px-6">
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] font-medium text-[#2D2926]">
-              Tree Name
-            </Label>
+            <Label className="text-[13px] font-medium text-[#2D2926]">Tree Name</Label>
             <Input
               placeholder="e.g. Anderson Family"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="h-11 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
+              className="h-11 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] outline-none placeholder:text-[#8C8782]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[13px] font-medium text-[#2D2926]">
-              Description
-            </Label>
+            <Label className="text-[13px] font-medium text-[#2D2926]">Description</Label>
             <textarea
               placeholder="Brief description of this family tree..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="h-20 resize-none rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-2.5 text-sm text-[#2D2926] placeholder:text-[#8C8782] outline-none"
+              className="h-20 resize-none rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-3 py-2.5 text-sm text-[#2D2926] outline-none placeholder:text-[#8C8782]"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label className="text-[13px] font-medium text-[#2D2926]">
-              Start Method
-            </Label>
+            <Label className="text-[13px] font-medium text-[#2D2926]">Start Method</Label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setMethod("scratch")}
+                onClick={() => setMethod('scratch')}
                 className={`flex items-center gap-3 rounded-lg border p-4 text-left transition-colors ${
-                  method === "scratch"
-                    ? "border-[#7D6B3D] bg-[#F5F2E9]"
-                    : "border-[#D6D0BE] bg-[#F5F2E9] hover:bg-white"
+                  method === 'scratch'
+                    ? 'border-[#7D6B3D] bg-[#F5F2E9]'
+                    : 'border-[#D6D0BE] bg-[#F5F2E9] hover:bg-white'
                 }`}
               >
-                <div className={`flex size-9 items-center justify-center rounded-lg ${
-                  method === "scratch" ? "bg-[#7D6B3D]" : "bg-[#E8E4D8]"
-                }`}>
-                  <FileTextIcon className={`size-4 ${
-                    method === "scratch" ? "text-[#F5F2E9]" : "text-[#8C8782]"
-                  }`} />
+                <div
+                  className={`flex size-9 items-center justify-center rounded-lg ${
+                    method === 'scratch' ? 'bg-[#7D6B3D]' : 'bg-[#E8E4D8]'
+                  }`}
+                >
+                  <FileTextIcon
+                    className={`size-4 ${
+                      method === 'scratch' ? 'text-[#F5F2E9]' : 'text-[#8C8782]'
+                    }`}
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-[#2D2926]">Start Fresh</p>
@@ -120,19 +119,23 @@ export function NewTreeDialog({ open, onOpenChange, onCreated }: NewTreeDialogPr
               </button>
               <button
                 type="button"
-                onClick={() => setMethod("gedcom")}
+                onClick={() => setMethod('gedcom')}
                 className={`flex items-center gap-3 rounded-lg border p-4 text-left transition-colors ${
-                  method === "gedcom"
-                    ? "border-[#7D6B3D] bg-[#F5F2E9]"
-                    : "border-[#D6D0BE] bg-[#F5F2E9] hover:bg-white"
+                  method === 'gedcom'
+                    ? 'border-[#7D6B3D] bg-[#F5F2E9]'
+                    : 'border-[#D6D0BE] bg-[#F5F2E9] hover:bg-white'
                 }`}
               >
-                <div className={`flex size-9 items-center justify-center rounded-lg ${
-                  method === "gedcom" ? "bg-[#7D6B3D]" : "bg-[#E8E4D8]"
-                }`}>
-                  <UploadIcon className={`size-4 ${
-                    method === "gedcom" ? "text-[#F5F2E9]" : "text-[#8C8782]"
-                  }`} />
+                <div
+                  className={`flex size-9 items-center justify-center rounded-lg ${
+                    method === 'gedcom' ? 'bg-[#7D6B3D]' : 'bg-[#E8E4D8]'
+                  }`}
+                >
+                  <UploadIcon
+                    className={`size-4 ${
+                      method === 'gedcom' ? 'text-[#F5F2E9]' : 'text-[#8C8782]'
+                    }`}
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-[#2D2926]">Import GEDCOM</p>
@@ -165,5 +168,5 @@ export function NewTreeDialog({ open, onOpenChange, onCreated }: NewTreeDialogPr
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

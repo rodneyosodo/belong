@@ -3,7 +3,14 @@ import { Button } from '@workspace/ui/components/button';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { cn } from '@workspace/ui/lib/utils';
-import { ArrowLeft, Loader2, LucideGitBranch, LucideUpload, LucideUsers, MailCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  Loader2,
+  LucideGitBranch,
+  LucideUpload,
+  LucideUsers,
+  MailCheck,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -117,9 +124,7 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
             <h2 className="font-['Playfair_Display'] text-[28px] font-semibold text-[#2D2926]">
               Forgot password?
             </h2>
-            <p className="text-sm text-[#5E5954]">
-              No worries, we&apos;ll send you a reset link.
-            </p>
+            <p className="text-sm text-[#5E5954]">No worries, we&apos;ll send you a reset link.</p>
           </div>
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -157,5 +162,3 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
     </div>
   );
 }
-
-

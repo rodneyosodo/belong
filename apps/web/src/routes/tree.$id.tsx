@@ -1,7 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router"
-import { useRef, useState, useEffect } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
-import { FamilyTree, type FamilyTreeHandle } from "@/components/family-tree"
+import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,28 +6,31 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@workspace/ui/components/breadcrumb"
-import { Separator } from "@workspace/ui/components/separator"
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@workspace/ui/components/sidebar"
-import { SettingsIcon } from "lucide-react"
-import { treeApi, type Tree } from "@/lib/api"
+} from '@workspace/ui/components/breadcrumb';
+import { Separator } from '@workspace/ui/components/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { SettingsIcon } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
 
-export const Route = createFileRoute("/tree/$id")({
+import { AppSidebar } from '@/components/app-sidebar';
+import { FamilyTree, type FamilyTreeHandle } from '@/components/family-tree';
+import { treeApi, type Tree } from '@/lib/api';
+
+export const Route = createFileRoute('/tree/$id')({
   component: TreePage,
-})
+});
 
 function TreePage() {
   const shareRef = useRef<FamilyTreeHandle>(null);
-  const { id } = Route.useParams()
-  const [tree, setTree] = useState<Tree | null>(null)
+  const { id } = Route.useParams();
+  const [tree, setTree] = useState<Tree | null>(null);
 
   useEffect(() => {
-    treeApi.get(id).then(setTree).catch(() => {})
-  }, [id])
+    treeApi
+      .get(id)
+      .then(setTree)
+      .catch(() => {});
+  }, [id]);
 
   return (
     <SidebarProvider>
@@ -39,20 +39,15 @@ function TreePage() {
         <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">
-                    Lineage
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="/">Lineage</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{tree?.name ?? "Tree"}</BreadcrumbPage>
+                  <BreadcrumbPage>{tree?.name ?? 'Tree'}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -99,5 +94,5 @@ function TreePage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

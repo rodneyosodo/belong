@@ -1,11 +1,4 @@
-import * as React from "react";
-import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
-import { authClient } from "@/lib/auth-client";
-import { treeApi, type Tree } from "@/lib/api";
+import { useNavigate } from '@tanstack/react-router';
 import {
   Sidebar,
   SidebarContent,
@@ -15,14 +8,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@workspace/ui/components/sidebar";
-import {
-  GitBranchIcon,
-  TreesIcon,
-  Share2Icon,
-  UploadIcon,
-  UserRoundIcon,
-} from "lucide-react";
+} from '@workspace/ui/components/sidebar';
+import { GitBranchIcon, TreesIcon, Share2Icon, UploadIcon, UserRoundIcon } from 'lucide-react';
+import * as React from 'react';
+import { useState } from 'react';
+
+import { NavMain } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
+import { treeApi, type Tree } from '@/lib/api';
+import { authClient } from '@/lib/auth-client';
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onTreesChanged?: () => void;
@@ -52,14 +46,14 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
 
   React.useEffect(() => {
     const handler = () => loadTrees();
-    window.addEventListener("trees-changed", handler);
-    return () => window.removeEventListener("trees-changed", handler);
+    window.addEventListener('trees-changed', handler);
+    return () => window.removeEventListener('trees-changed', handler);
   }, [loadTrees]);
 
   const navMain = [
     {
-      title: "My Trees",
-      url: "/",
+      title: 'My Trees',
+      url: '/',
       icon: <TreesIcon />,
       isActive: true,
       items: ownedTrees.map((t) => ({
@@ -69,8 +63,8 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
       })),
     },
     {
-      title: "Shared with Me",
-      url: "#",
+      title: 'Shared with Me',
+      url: '#',
       icon: <Share2Icon />,
       items: sharedTrees.map((t) => ({
         title: t.name,
@@ -85,7 +79,7 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
       <SidebarContent>
         <SidebarGroup>
           <div className="flex items-center gap-3 px-2 py-3">
-            <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-10 items-center justify-center rounded-lg">
               <GitBranchIcon className="size-5" />
             </div>
             <div className="grid flex-1 text-start leading-tight">
@@ -97,13 +91,13 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => navigate({ to: "/import" })}>
+              <SidebarMenuButton onClick={() => navigate({ to: '/import' })}>
                 <UploadIcon />
                 <span>Import GEDCOM</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => navigate({ to: "/profile" })}>
+              <SidebarMenuButton onClick={() => navigate({ to: '/profile' })}>
                 <UserRoundIcon />
                 <span>Profile</span>
               </SidebarMenuButton>
@@ -114,9 +108,9 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
       <SidebarFooter>
         <NavUser
           user={{
-            name: user?.name ?? "User",
-            email: user?.email ?? "",
-            avatar: user?.image ?? "",
+            name: user?.name ?? 'User',
+            email: user?.email ?? '',
+            avatar: user?.image ?? '',
           }}
         />
       </SidebarFooter>
