@@ -121,6 +121,40 @@ const start = async () => {
 
       return { success: true, cover_image: dataUrl };
     })
+    .post('/api/upload/person-photo', async (context) => {
+      const formData = await context.request.formData();
+      const file = formData.get('file');
+
+      if (!file || !(file instanceof File)) {
+        context.set.status = 400;
+        return { error: 'No file provided' };
+      }
+
+      if (!file.type.startsWith('image/')) {
+        context.set.status = 400;
+        return { error: 'File must be an image' };
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        context.set.status = 400;
+        return { error: 'File must be under 5MB' };
+      }
+
+      const session = await auth.api.getSession({
+        headers: context.request.headers,
+      });
+
+      if (!session?.user?.id) {
+        context.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+
+      const buffer = await file.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      const dataUrl = `data:${file.type};base64,${base64}`;
+
+      return { success: true, photo_url: dataUrl };
+    })
     .get('/', () => 'Hello Elysia')
     .listen(5090);
 

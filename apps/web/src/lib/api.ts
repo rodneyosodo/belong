@@ -177,3 +177,23 @@ export async function uploadCoverImage(
 
   return res.json();
 }
+
+export async function uploadPersonPhoto(
+  file: File,
+): Promise<{ success: boolean; photo_url: string }> {
+  const body = new FormData();
+  body.append('file', file);
+
+  const res = await fetch(`${env.BELONG_BACKEND_URL}/api/upload/person-photo`, {
+    method: 'POST',
+    credentials: 'include',
+    body,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(err.error ?? 'Upload failed');
+  }
+
+  return res.json();
+}

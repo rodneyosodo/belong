@@ -10,9 +10,11 @@ import {
 } from '@workspace/ui/components/dialog';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { HeartIcon, BabyIcon, ArrowUpIcon, UserPlusIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { HeartIcon, BabyIcon, ArrowUpIcon, UserPlusIcon, UploadIcon, Loader2, XIcon } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
+import { uploadPersonPhoto } from '@/lib/api';
 import type { ContextMenuAction } from './node-context-menu';
 
 export type PersonFormData = {
@@ -87,6 +89,8 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
   const [dateOfDeath, setDateOfDeath] = useState('');
   const [notes, setNotes] = useState('');
   const [photo, setPhoto] = useState('');
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [relationshipType, setRelationshipType] = useState('Biological');
 
   useEffect(() => {
@@ -98,12 +102,47 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
       setDateOfDeath('');
       setNotes('');
       setPhoto('');
+      setPhotoPreview('');
+      setUploadingPhoto(false);
       setRelationshipType('Biological');
     }
   }, [open]);
 
   const meta = actionMeta[action];
   const Icon = meta.icon;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.currentTarget.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('File must be an image');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File must be under 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const result = await uploadPersonPhoto(file);
+      setPhoto(result.photo_url);
+      setPhotoPreview(result.photo_url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhoto('');
+    setPhotoPreview('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleConfirm = () => {
     if (!firstName.trim() || !lastName.trim()) return;
@@ -124,6 +163,8 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
     setDateOfDeath('');
     setNotes('');
     setPhoto('');
+    setPhotoPreview('');
+    setUploadingPhoto(false);
     setRelationshipType('Biological');
   };
 
@@ -255,14 +296,51 @@ export function AddPersonDialog({ open, onOpenChange, action, onConfirm }: AddPe
 
           <div className="flex flex-col gap-1.5">
             <Label className="text-[13px] font-medium text-[#2D2926]">
-              Photo URL <span className="text-[#8C8782]">(optional)</span>
+              Photo <span className="text-[#8C8782]">(optional)</span>
             </Label>
-            <Input
-              placeholder="https://example.com/photo.jpg"
-              value={photo}
-              onChange={(e) => setPhoto(e.target.value)}
-              className="h-10 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-sm text-[#2D2926] outline-none placeholder:text-[#8C8782]"
-            />
+            <div className="flex items-center gap-3">
+              {photoPreview ? (
+                <div className="relative">
+                  <img
+                    src={photoPreview}
+                    alt="Preview"
+                    className="size-12 rounded-full border border-[#D6D0BE] object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#2D2926] text-white"
+                  >
+                    <XIcon className="size-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex size-12 items-center justify-center rounded-full border border-dashed border-[#D6D0BE] bg-[#F5F2E9]">
+                  <UploadIcon className="size-4 text-[#8C8782]" />
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploadingPhoto}
+                onClick={() => fileInputRef.current?.click()}
+                className="h-8 rounded-lg border-[#D6D0BE] bg-[#F5F2E9] px-3 text-xs font-medium text-[#2D2926] hover:bg-white"
+              >
+                {uploadingPhoto ? (
+                  <Loader2 className="mr-1.5 size-3 animate-spin" />
+                ) : (
+                  <UploadIcon className="mr-1.5 size-3" />
+                )}
+                {photoPreview ? 'Change' : 'Upload'}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </div>
           </div>
         </div>
 

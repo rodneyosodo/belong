@@ -9,8 +9,9 @@
 | UI                 | shadcn/ui (base-nova), Base UI, Lucide          |
 | Tree Visualization | React Flow (xyflow) + Dagre                     |
 | Backend            | Elysia.js (Bun HTTP framework)                  |
-| Auth               | Better Auth (email/password, Google OAuth)      |
+| Auth               | Better Auth (email/password, Google/GitHub OAuth, organizations plugin) |
 | Database           | PostgreSQL via `pg` (node-postgres)             |
+| Email              | Nodemailer (SMTP — password reset, invitations) |
 | Deployment         | Docker (self-hosted)                            |
 
 ## Phase 1: Project Setup & Foundation
@@ -20,10 +21,9 @@
 - [x] Initialize shadcn/ui and install base components (Button, Card, Dialog, Tabs, Dropdown, Sheet, Avatar, Sidebar, Breadcrumb, Field, etc.)
   - Form system provided by `field` component (Field, FieldGroup, FieldLabel, FieldDescription, FieldError) — base-ui equivalent of shadcn Form
 - [x] Set up domain database tables via raw SQL / migration files:
-  - `trees` — id, owner_id, name, description, cover_image, is_public, created_at, updated_at
-  - `tree_members` — id, tree_id, user_id, role (owner/editor/viewer)
-  - `persons` — id, tree_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata (JSONB)
-  - `relationships` — id, tree_id, person_a_id, person_b_id, type (parent/child/spouse/sibling/adopted/step-parent/step-child), metadata (JSONB)
+  - `persons` — id, organization_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata (JSONB)
+  - `relationships` — id, organization_id, person_a_id, person_b_id, type, metadata (JSONB)
+  - Trees modeled as Better Auth organizations with extended fields (description, coverImage, isPublic)
 - [x] Better Auth with email/password + Google + GitHub OAuth (backend + client)
 - [x] Docker compose for PostgreSQL (compose-dev.yaml)
 - [x] Dockerfile for backend (apps/backend/Dockerfile)
@@ -33,23 +33,25 @@
 ## Phase 2: Authentication & User Management
 
 - [x] Auth pages: Sign in, Sign up
-- [ ] Forgot password flow
+- [x] Forgot password flow (forgot-password page, reset-password page, SMTP email via Nodemailer)
 - [x] Better Auth client setup with session management
-- [ ] Auth middleware — protect routes, redirect unauthenticated users
-- [ ] User profile page — edit name, avatar, change password
+- [x] Auth middleware — auth guard on root route, redirect unauthenticated users, public routes for tree/person views
+- [x] User profile page — edit name, avatar upload, change password, theme toggle, sign out
 
 ## Phase 3: Tree CRUD & Dashboard
 
-- [x] Dashboard page — tree listing (hardcoded mock data)
+- [x] Dashboard page — tree listing (owned + shared trees from API)
 - [x] New tree dialog — create from scratch or import GEDCOM
-- [ ] Backend API endpoints for tree CRUD
-- [ ] Connect dashboard to real API data
-- [ ] Tree settings page — name, description, cover image, visibility
-- [ ] Collaboration system:
-  - [ ] Invite members by email
-  - [ ] Assign roles: owner / editor / viewer
-  - [ ] Manage members list
-  - [ ] Accept/decline invitations
+- [x] Backend API endpoints for tree CRUD (list, get, create, update, delete via `/api/trees`)
+- [x] Connect dashboard to real API data
+- [x] Tree settings page — name, description, cover image upload, visibility toggle, delete
+- [x] Collaboration system (powered by Better Auth organizations):
+  - [x] Invite members by email
+  - [x] Assign roles: owner / admin (editor) / member (viewer)
+  - [x] Manage members list — view, update role, remove
+  - [x] Accept/decline invitations (dedicated invitation page)
+  - [x] Cancel pending invitations
+  - [x] Invitation emails via SMTP
 
 ## Phase 4: Visual Tree Editor (Core Feature)
 
@@ -57,17 +59,19 @@
 - [x] Custom person nodes — display photo, name, birth/death years, gender icon
 - [x] Custom relationship edges
 - [x] Dagre auto-layout (top-down direction)
-- [x] Add person dialog — form with fields (name, dates, gender, bio, photo)
-- [x] Node context menu — add spouse, add child, add sibling, edit, delete
+- [x] Add person dialog — form with fields (name, dates, gender, bio, photo, relationship type)
+- [x] Node context menu — add spouse, add child, add parent, add sibling, edit, delete, view
 - [x] Zoom, pan, fit-to-view controls
 - [x] Mini-map for navigation
 - [x] Layout modes:
   - [x] Top-down auto-layout via Dagre
-  - [ ] Left-to-right (horizontal) layout
-  - [ ] Free-form manual drag
-- [ ] Edit person — click node to open profile editor
-- [ ] Delete person/relationship — with confirmation
-- [ ] Undo/redo support
+  - [x] Left-to-right (horizontal) layout
+  - [x] Free-form manual drag
+- [x] Edit person — context menu opens edit dialog with full form
+- [x] Delete person/relationship — with confirmation dialog showing relationship count
+- [x] Undo/redo support (Ctrl+Z / Ctrl+Shift+Z, history hook with undo/redo stack)
+- [x] Stats panel — member count, living count, generation count
+- [x] Add member button, export GEDCOM, share link, import link in toolbar
 
 ## Phase 5: Member Profiles
 
@@ -75,20 +79,20 @@
 - [x] Profile fields: name, gender, birth/death dates, bio, photo
 - [x] Family relations panel — spouse, parents, children, siblings
 - [x] Life timeline — birth/death events
-- [ ] Photo upload — avatar/photo storage
-- [ ] Edit profile form
+- [x] Photo upload — avatar/photo storage for persons (file upload via /api/upload/person-photo)
+- [x] Edit profile form (edit-person-dialog with all fields)
 - [ ] Timeline view — marriage, custom events
 
 ## Phase 6: Relationship Types
 
 - [x] Parent → Child (biological)
 - [x] Spouse / Partner
-- [ ] Sibling (via shared parent edges)
+- [x] Sibling (via shared parent edges — adds child relationships from same parents)
 - [ ] Adopted parent → Adopted child
 - [ ] Step-parent → Step-child
 - [ ] Half-sibling
 - [ ] Relationship constraints — prevent invalid relationships
-- [ ] Visual distinction — different edge styles/colors per type
+- [ ] Visual distinction — different edge styles/colors per type (currently only spouse has distinct style)
 
 ## Phase 7: Search & Navigation
 
@@ -102,6 +106,7 @@
 - [x] GEDCOM parser — import `.ged` files, convert to persons + relationships
 - [x] GEDCOM exporter — export tree data to GEDCOM 5.5.1 format
 - [x] Import page with file upload, error handling, success summary
+- [x] Server-side import with transaction (rollback on failure)
 - [ ] Import preview — show what will be imported before committing
 - [ ] Error handling — handle malformed GEDCOM files gracefully
 
@@ -120,7 +125,7 @@
 - [ ] Responsive design — mobile-friendly tree viewer (touch pan/zoom)
 - [ ] Performance optimization — virtualized rendering for 500+ person trees
 - [ ] Error boundaries
-- [ ] Loading states — skeletons, spinners
+- [ ] Loading states — skeletons, spinners (partial — some routes have loading spinners)
 - [ ] Empty states — helpful onboarding for new trees
 
 ## Phase 11: Docker & Deployment
@@ -128,7 +133,7 @@
 - [x] Dockerfile for backend (Elysia/Bun)
 - [x] Dockerfile for web (Vite static build + nginx)
 - [x] docker-compose.yml — backend + web + PostgreSQL
-- [ ] Environment variables — documented `.env.example`
+- [x] Environment variables — documented `example.env` with all config vars
 - [ ] README — setup instructions for Docker deployment
 
 ## Project Structure
@@ -138,27 +143,67 @@ belong/
 ├── apps/
 │   ├── web/                        # Vite + React + TanStack Router
 │   │   ├── src/
-│   │   │   ├── components/         # App components (family tree, dialogs, sidebar, forms)
-│   │   │   ├── hooks/              # Custom React hooks
-│   │   │   ├── lib/                # Auth client, env config
-│   │   │   ├── routes/             # TanStack Router route files
-│   │   │   ├── main.tsx            # App entry point
-│   │   │   └── routeTree.gen.ts    # Auto-generated route tree
+│   │   │   ├── components/         # App components
+│   │   │   │   ├── add-person-dialog.tsx
+│   │   │   │   ├── app-sidebar.tsx
+│   │   │   │   ├── delete-confirm-dialog.tsx
+│   │   │   │   ├── edit-person-dialog.tsx
+│   │   │   │   ├── family-edge.tsx
+│   │   │   │   ├── family-tree-node.tsx
+│   │   │   │   ├── family-tree.tsx  # Main tree editor with React Flow
+│   │   │   │   ├── forgot-password-form.tsx
+│   │   │   │   ├── login-form.tsx
+│   │   │   │   ├── members-panel.tsx # Org member management
+│   │   │   │   ├── nav-main.tsx
+│   │   │   │   ├── nav-projects.tsx
+│   │   │   │   ├── nav-user.tsx
+│   │   │   │   ├── new-tree-dialog.tsx
+│   │   │   │   ├── node-context-menu.tsx
+│   │   │   │   ├── profile-form.tsx
+│   │   │   │   ├── reset-password-form.tsx
+│   │   │   │   ├── signup-form.tsx
+│   │   │   │   ├── team-switcher.tsx
+│   │   │   │   └── theme-provider.tsx
+│   │   │   ├── hooks/
+│   │   │   │   ├── use-history.ts   # Undo/redo history
+│   │   │   │   └── use-mobile.ts
+│   │   │   ├── lib/
+│   │   │   │   ├── api.ts           # API client (tree, person, relationship, import)
+│   │   │   │   ├── auth-client.ts   # Better Auth client
+│   │   │   │   ├── auth-utils.ts    # Auth guard, session helpers
+│   │   │   │   └── env.ts           # Runtime environment config
+│   │   │   ├── routes/              # TanStack Router file-based routes
+│   │   │   │   ├── __root.tsx       # Root layout with auth guard
+│   │   │   │   ├── index.tsx        # Dashboard
+│   │   │   │   ├── login.tsx
+│   │   │   │   ├── signup.tsx
+│   │   │   │   ├── forgot-password.tsx
+│   │   │   │   ├── reset-password.tsx
+│   │   │   │   ├── profile.tsx      # User profile page
+│   │   │   │   ├── tree.$id.tsx     # Tree editor
+│   │   │   │   ├── tree.$id_.settings.tsx  # Tree settings
+│   │   │   │   ├── person.$id.tsx   # Person detail page
+│   │   │   │   ├── import.tsx       # GEDCOM import
+│   │   │   │   └── invitation.$id.tsx  # Invitation accept/decline
+│   │   │   └── main.tsx
 │   │   ├── index.html
 │   │   └── vite.config.ts
-  │   └── backend/                    # Elysia.js + Better Auth
-  │       ├── src/
-  │       │   ├── index.ts            # Elysia server entry (runs migrations on startup)
-  │       │   ├── bin/
-  │       │   │   └── migrate.ts      # Standalone migration CLI
-  │       │   └── lib/
-  │       │       ├── auth.ts         # Better Auth config
-  │       │       ├── db.ts           # Shared PostgreSQL pool
-  │       │       └── migrate.ts      # Migration runner
-  │       ├── migrations/
-  │       │   └── 0002_domain_tables.sql  # Domain table definitions
-  │       ├── better-auth_migrations/ # Auth table migrations (auto-managed)
-  │       └── compose-dev.yaml        # PostgreSQL dev container
+│   └── backend/                    # Elysia.js + Better Auth
+│       ├── src/
+│       │   ├── index.ts            # Elysia server (migrations, routes, upload endpoints)
+│       │   ├── bin/
+│       │   │   └── migrate.ts      # Standalone migration CLI
+│       │   ├── lib/
+│       │   │   ├── auth.ts         # Better Auth config (org plugin, SMTP, SSO)
+│       │   │   ├── db.ts           # Shared PostgreSQL pool
+│       │   │   └── migrate.ts      # Migration runner
+│       │   └── routes/
+│       │       ├── trees.ts        # Tree CRUD (GET/POST/PUT/DELETE /api/trees)
+│       │       └── persons.ts      # Person/relationship CRUD, GEDCOM import
+│       ├── migrations/
+│       │   └── 0002_domain_tables.sql  # persons + relationships tables
+│       ├── better-auth_migrations/ # Auth table migrations (auto-managed)
+│       └── compose-dev.yaml        # PostgreSQL dev container
 ├── packages/
 │   └── ui/                         # Shared shadcn/ui components
 │       ├── src/
@@ -169,6 +214,7 @@ belong/
 │       │       └── globals.css     # Tailwind v4 global styles + CSS vars
 │       └── components.json
 ├── docker-compose.yml              # Full-stack orchestration
+├── example.env                     # Environment variable reference
 ├── package.json                    # Turborepo root
 ├── turbo.json
 └── tsconfig.json
