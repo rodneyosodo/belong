@@ -144,7 +144,7 @@
 - [x] Dockerfile for web (Vite static build + nginx)
 - [x] docker-compose.yml — backend + web + PostgreSQL
 - [x] Environment variables — documented `example.env` with all config vars
-- [ ] README — setup instructions for Docker deployment
+- [x] README — setup instructions for Docker deployment
 
 ## Project Structure
 
