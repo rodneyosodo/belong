@@ -8,6 +8,7 @@ import {
   EyeIcon,
   UsersIcon,
   HomeIcon,
+  SplitIcon,
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
@@ -16,7 +17,9 @@ export type ContextMenuAction =
   | 'child'
   | 'parent'
   | 'sibling'
+  | 'half-sibling'
   | 'adopted'
+  | 'adopted-parent'
   | 'step-child'
   | 'step-parent'
   | 'edit'
@@ -43,7 +46,9 @@ const actions: {
   { action: 'child', label: 'Add Child', icon: BabyIcon },
   { action: 'parent', label: 'Add Parent', icon: ArrowUpIcon },
   { action: 'sibling', label: 'Add Sibling', icon: UserPlusIcon },
+  { action: 'half-sibling', label: 'Add Half-Sibling', icon: SplitIcon },
   { action: 'adopted', label: 'Add Adopted Child', icon: UsersIcon },
+  { action: 'adopted-parent', label: 'Add Adopted Parent', icon: UsersIcon },
   { action: 'step-child', label: 'Add Step-Child', icon: HomeIcon },
   { action: 'step-parent', label: 'Add Step-Parent', icon: HomeIcon },
 ];

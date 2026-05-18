@@ -166,9 +166,11 @@ const REL_STYLE: Record<string, { stroke: string; strokeWidth: number; dashArray
   parent: { stroke: '#5E5954', strokeWidth: 1.5, edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
   child: { stroke: '#5E5954', strokeWidth: 1.5, edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
   adopted: { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
+  'adopted-parent': { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
   'step-parent': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
   'step-child': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
   sibling: { stroke: '#16A34A', strokeWidth: 1.5, dashArray: '8 4', edgeType: 'straight', sourceHandle: 'right', targetHandle: 'left' },
+  'half-sibling': { stroke: '#D97706', strokeWidth: 1.5, dashArray: '2 4', edgeType: 'straight', sourceHandle: 'right', targetHandle: 'left' },
 };
 
 function relationshipToEdge(r: Relationship): Edge {
@@ -220,11 +222,13 @@ function validateRelationship(
     case 'spouse':
     case 'child':
     case 'adopted':
-    case 'step-child': {
+    case 'step-child':
+    case 'half-sibling': {
       return null;
     }
     case 'parent':
-    case 'step-parent': {
+    case 'step-parent':
+    case 'adopted-parent': {
       const existingParentEdges = edges.filter(
         (e) => e.target === targetId && e.source !== e.target && e.type === 'smoothstep' && e.label !== 'spouse' && e.label !== 'sibling',
       );
@@ -272,7 +276,12 @@ function getFreeFormPosition(
     case 'parent':
       return { x: targetNode.position.x, y: targetNode.position.y - nodeHeight - spacing };
     case 'sibling':
+    case 'half-sibling':
       return { x: targetNode.position.x + nodeWidth + spacing, y: targetNode.position.y };
+    case 'parent':
+    case 'step-parent':
+    case 'adopted-parent':
+      return { x: targetNode.position.x, y: targetNode.position.y - nodeHeight - spacing };
     default:
       return { x: targetNode.position.x, y: targetNode.position.y + nodeHeight + spacing };
   }
@@ -885,6 +894,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
           break;
         case 'spouse':
         case 'sibling':
+        case 'half-sibling':
           break;
         case 'child':
         case 'adopted':
@@ -893,6 +903,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
           break;
         case 'parent':
         case 'step-parent':
+        case 'adopted-parent':
           newGeneration = targetData.generation - 1;
           break;
       }
@@ -974,6 +985,15 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
             newEdges.push(relationshipToEdge(rel));
             break;
           }
+          case 'adopted-parent': {
+            const rel = await relationshipApi.create(treeId, {
+              person_a_id: createdPerson.id,
+              person_b_id: targetId,
+              type: 'adopted-parent',
+            });
+            newEdges.push(relationshipToEdge(rel));
+            break;
+          }
           case 'step-child': {
             const rel = await relationshipApi.create(treeId, {
               person_a_id: targetId,
@@ -990,6 +1010,24 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
               type: 'step-parent',
             });
             newEdges.push(relationshipToEdge(rel));
+            break;
+          }
+          case 'half-sibling': {
+            const parents = findParents(targetId, edges);
+            if (parents.length > 0) {
+              const rel = await relationshipApi.create(treeId, {
+                person_a_id: parents[0],
+                person_b_id: createdPerson.id,
+                type: 'child',
+              });
+              newEdges.push(relationshipToEdge(rel));
+            }
+            const halfRel = await relationshipApi.create(treeId, {
+              person_a_id: targetId,
+              person_b_id: createdPerson.id,
+              type: 'half-sibling',
+            });
+            newEdges.push(relationshipToEdge(halfRel));
             break;
           }
         }

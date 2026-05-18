@@ -8,9 +8,11 @@ const REL_STYLES: Record<string, { stroke: string; strokeWidth: number; dashArra
   parent: { stroke: '#5E5954', strokeWidth: 1.5 },
   child: { stroke: '#5E5954', strokeWidth: 1.5 },
   adopted: { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3' },
+  'adopted-parent': { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3' },
   'step-parent': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4' },
   'step-child': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4' },
   sibling: { stroke: '#16A34A', strokeWidth: 1.5, dashArray: '8 4' },
+  'half-sibling': { stroke: '#D97706', strokeWidth: 1.5, dashArray: '2 4' },
 };
 
 function findSpouse(nodeId: string, allEdges: Edge[]): string | null {

@@ -282,7 +282,7 @@ export const personRoutes = new Elysia({ prefix: '/api/trees' })
       return { error: 'person_a_id, person_b_id, and type are required' };
     }
 
-    const VALID_TYPES = ['parent', 'child', 'spouse', 'sibling', 'adopted', 'step-parent', 'step-child'];
+    const VALID_TYPES = ['parent', 'child', 'spouse', 'sibling', 'adopted', 'adopted-parent', 'step-parent', 'step-child', 'half-sibling'];
     if (!VALID_TYPES.includes(body.type)) {
       context.set.status = 400;
       return { error: `Invalid relationship type. Must be one of: ${VALID_TYPES.join(', ')}` };

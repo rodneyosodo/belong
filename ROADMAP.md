@@ -88,11 +88,21 @@
 - [x] Parent → Child (biological)
 - [x] Spouse / Partner
 - [x] Sibling (via shared parent edges — adds child relationships from same parents)
-- [ ] Adopted parent → Adopted child
-- [ ] Step-parent → Step-child
-- [ ] Half-sibling
-- [ ] Relationship constraints — prevent invalid relationships
-- [ ] Visual distinction — different edge styles/colors per type (currently only spouse has distinct style)
+- [x] Adopted parent → Adopted child
+- [x] Step-parent → Step-child
+- [x] Half-sibling
+- [x] Relationship constraints — prevent invalid relationships (frontend + backend validation)
+- [x] Visual distinction — different edge styles/colors per type:
+  - Spouse: solid gold (#7D6B3D)
+  - Parent/Child: solid gray (#5E5954)
+  - Adopted: blue dashed (#2563EB)
+  - Step-parent/Step-child: purple dotted (#9333EA)
+  - Sibling: green dashed (#16A34A)
+  - Half-sibling: amber dotted (#D97706)
+- [x] Layout persistence — save/load tree layout (mode + node positions) per tree in DB (`tree_layouts` table)
+  - Each layout mode (TB/LR/FREE) has independently saved positions
+  - Switching between modes restores the previous layout for that mode
+  - Drag positions in FREE mode auto-persist
 
 ## Phase 7: Search & Navigation
 
