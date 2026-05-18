@@ -16,7 +16,7 @@ import {
 } from '@workspace/ui/components/card';
 import { Separator } from '@workspace/ui/components/separator';
 import { SidebarTrigger } from '@workspace/ui/components/sidebar';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, PlusIcon } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, PlusIcon, UsersIcon, HeartIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 
 import { importApi, treeApi, type Tree } from '@/lib/api';
@@ -82,6 +82,9 @@ function tokenize(text: string): GedLine[] {
       const trimmed = line.trim();
       const parts = trimmed.split(' ');
       const level = Number(parts[0]);
+      if (Number.isNaN(level)) {
+        throw new Error(`Invalid GEDCOM line: "${trimmed.slice(0, 80)}"`);
+      }
       let idx = 1;
       let xref: string | undefined;
       if (parts[1]?.startsWith('@')) {
@@ -156,8 +159,24 @@ interface ParsedRelationship {
 function parseGedcom(text: string): {
   persons: ParsedPerson[];
   relationships: ParsedRelationship[];
+  warnings: string[];
 } {
+  const warnings: string[] = [];
+
+  if (!text.trim()) {
+    throw new Error('File is empty.');
+  }
+
   const lines = tokenize(text);
+  if (lines.length === 0) {
+    throw new Error('No valid GEDCOM lines found in file.');
+  }
+
+  const hasHead = lines.some((l) => l.tag === 'HEAD');
+  if (!hasHead) {
+    warnings.push('File does not contain a HEAD record — it may not be a valid GEDCOM file.');
+  }
+
   const tree = buildTree(lines);
 
   const individuals: Record<string, any> = {};
@@ -166,6 +185,10 @@ function parseGedcom(text: string): {
   for (const node of tree) {
     if (node.tag === 'INDI' && node.xref) individuals[node.xref] = node;
     if (node.tag === 'FAM' && node.xref) families[node.xref] = node;
+  }
+
+  if (Object.keys(individuals).length === 0) {
+    throw new Error('No individual records (INDI) found in this GEDCOM file.');
   }
 
   let idCounter = 0;
@@ -186,6 +209,10 @@ function parseGedcom(text: string): {
     const gender = sex === 'F' ? 'female' : sex === 'M' ? 'male' : '';
     const birthDate = normalizeDate(getAllValues(node, ['BIRT', 'DATE'])) || '';
     const deathDate = normalizeDate(getAllValues(node, ['DEAT', 'DATE'])) || '';
+
+    if (nameVal === 'Unknown') {
+      warnings.push(`Individual ${xref} has no NAME record.`);
+    }
 
     persons.push({
       idx,
@@ -219,7 +246,11 @@ function parseGedcom(text: string): {
 
     for (const childXref of children) {
       const childIdx = getId(childXref);
-      if (motherIdx >= 0 && childIdx >= 0) {
+      if (childIdx < 0) {
+        warnings.push(`Family references unknown child ${childXref}.`);
+        continue;
+      }
+      if (motherIdx >= 0) {
         relationships.push({
           person_a_id: motherIdx,
           person_b_id: childIdx,
@@ -229,7 +260,13 @@ function parseGedcom(text: string): {
     }
   }
 
-  return { persons, relationships };
+  return { persons, relationships, warnings };
+}
+
+function GenderIcon({ gender }: { gender: string }) {
+  if (gender === 'male') return <span className="text-blue-600 text-xs">&#9794;</span>;
+  if (gender === 'female') return <span className="text-pink-600 text-xs">&#9792;</span>;
+  return null;
 }
 
 function ImportPage() {
@@ -238,16 +275,23 @@ function ImportPage() {
   const [trees, setTrees] = useState<Tree[]>([]);
   const [selectedTreeId, setSelectedTreeId] = useState(search.treeId);
   const [creating, setCreating] = useState(false);
-  const [result, setResult] = useState<{ person_count: number; relationship_count: number } | null>(
-    null,
-  );
+  const [result, setResult] = useState<{
+    person_count: number;
+    relationship_count: number;
+    warnings: string[];
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [showPersons, setShowPersons] = useState(false);
+  const [showRelationships, setShowRelationships] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const parsedRef = useRef<{ persons: ParsedPerson[]; relationships: ParsedRelationship[] } | null>(
-    null,
-  );
+  const parsedRef = useRef<{
+    persons: ParsedPerson[];
+    relationships: ParsedRelationship[];
+    warnings: string[];
+  } | null>(null);
 
   useEffect(() => {
     treeApi
@@ -279,13 +323,23 @@ function ImportPage() {
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.name.match(/\.(ged|gedcom)$/i)) {
+      setError('Please select a valid GEDCOM file (.ged or .gedcom).');
+      return;
+    }
+
     setError(null);
     setResult(null);
+    setFileName(file.name);
     setLoading(true);
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
         const text = evt.target?.result as string;
+        if (!text || text.length === 0) {
+          throw new Error('File is empty.');
+        }
         const parsed = parseGedcom(text);
         if (parsed.persons.length === 0) {
           setError('No individuals found in this GEDCOM file.');
@@ -295,16 +349,17 @@ function ImportPage() {
           setResult({
             person_count: parsed.persons.length,
             relationship_count: parsed.relationships.length,
+            warnings: parsed.warnings,
           });
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to parse GEDCOM file.');
+        setError(err.message || 'Failed to parse GEDCOM file. The file may be corrupted or in an unsupported format.');
         parsedRef.current = null;
       }
       setLoading(false);
     };
     reader.onerror = () => {
-      setError('Failed to read file.');
+      setError('Failed to read file. Please try again.');
       setLoading(false);
     };
     reader.readAsText(file);
@@ -327,13 +382,14 @@ function ImportPage() {
       });
       navigate({ to: '/tree/$id', params: { id: selectedTreeId } });
     } catch (err: any) {
-      setError(err.message || 'Import failed.');
+      setError(err.message || 'Import failed. Please try again.');
     } finally {
       setUploading(false);
     }
   };
 
   const selectedTree = trees.find((t) => t.id === selectedTreeId);
+  const parsed = parsedRef.current;
 
   return (
     <>
@@ -356,117 +412,248 @@ function ImportPage() {
           </Breadcrumb>
         </div>
       </header>
-      <div className="flex flex-1 items-center justify-center p-6">
-        <Card className="w-full max-w-lg border-[#D6D0BE] shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-['Playfair_Display'] text-lg font-semibold text-[#2D2926]">
-              <Upload className="size-4 text-[#7D6B3D]" />
-              Import GEDCOM
-            </CardTitle>
-            <CardDescription className="text-xs text-[#5E5954]">
-              Upload a GEDCOM (.ged) file to populate a family tree.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#2D2926]">
-                Import into
-              </label>
-              {trees.length > 0 ? (
-                <select
-                  value={selectedTreeId}
-                  onChange={(e) => setSelectedTreeId(e.target.value)}
-                  className="w-full rounded-lg border border-[#D6D0BE] bg-white px-3 py-2 text-sm text-[#2D2926] outline-none focus:border-[#7D6B3D]"
-                >
-                  {trees.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.person_count ?? 0} people)
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <button
-                  onClick={handleCreateTree}
-                  disabled={creating}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-4 py-2 text-sm font-medium text-[#2D2926] hover:bg-white disabled:opacity-50"
-                >
-                  {creating ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <PlusIcon className="size-4" />
-                      Create New Tree
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-
-            {selectedTreeId && (
-              <div
-                onClick={() => fileRef.current?.click()}
-                className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#D6D0BE] bg-white p-8 text-center transition-colors hover:border-[#7D6B3D]"
-              >
-                <FileText className="size-8 text-[#8C8782]" />
-                <div>
-                  <p className="text-sm font-medium text-[#2D2926]">
-                    {loading ? 'Reading file...' : 'Click to select a .ged file'}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#8C8782]">GEDCOM 5.5.1 format supported</p>
-                </div>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".ged,.gedcom"
-                  className="hidden"
-                  onChange={handleFile}
-                />
+      <div className="flex flex-1 items-start justify-center p-6">
+        <div className="w-full max-w-2xl space-y-4">
+          <Card className="border-[#D6D0BE] shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-['Playfair_Display'] text-lg font-semibold text-[#2D2926]">
+                <Upload className="size-4 text-[#7D6B3D]" />
+                Import GEDCOM
+              </CardTitle>
+              <CardDescription className="text-xs text-[#5E5954]">
+                Upload a GEDCOM (.ged) file to populate a family tree.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-[#2D2926]">
+                  Import into
+                </label>
+                {trees.length > 0 ? (
+                  <select
+                    value={selectedTreeId}
+                    onChange={(e) => setSelectedTreeId(e.target.value)}
+                    className="w-full rounded-lg border border-[#D6D0BE] bg-white px-3 py-2 text-sm text-[#2D2926] outline-none focus:border-[#7D6B3D]"
+                  >
+                    {trees.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.person_count ?? 0} people)
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleCreateTree}
+                    disabled={creating}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-4 py-2 text-sm font-medium text-[#2D2926] hover:bg-white disabled:opacity-50"
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <PlusIcon className="size-4" />
+                        Create New Tree
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
-            )}
 
-            {error && (
-              <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                <AlertCircle className="mt-0.5 size-4 shrink-0" />
-                {error}
-              </div>
-            )}
-
-            {result && (
-              <div className="space-y-3">
-                <div className="flex items-start gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-                  <CheckCircle className="mt-0.5 size-4 shrink-0" />
+              {selectedTreeId && (
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#D6D0BE] bg-white p-8 text-center transition-colors hover:border-[#7D6B3D]"
+                >
+                  <FileText className="size-8 text-[#8C8782]" />
                   <div>
-                    <p className="font-medium">File parsed successfully!</p>
-                    <p className="text-green-600">
-                      {result.person_count} individuals, {result.relationship_count} relationships
-                      found.
+                    <p className="text-sm font-medium text-[#2D2926]">
+                      {loading ? 'Reading file...' : fileName ?? 'Click to select a .ged file'}
                     </p>
+                    <p className="mt-0.5 text-xs text-[#8C8782]">GEDCOM 5.5.1 format supported</p>
+                  </div>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept=".ged,.gedcom"
+                    className="hidden"
+                    onChange={handleFile}
+                  />
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                  <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                  <div>
+                    <p className="font-medium">Import Error</p>
+                    <p className="text-red-600">{error}</p>
                   </div>
                 </div>
+              )}
+
+              {result && (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+                    <CheckCircle className="mt-0.5 size-4 shrink-0" />
+                    <div>
+                      <p className="font-medium">File parsed successfully!</p>
+                      <p className="text-green-600">
+                        {result.person_count} individuals, {result.relationship_count} relationships
+                        found.
+                      </p>
+                    </div>
+                  </div>
+
+                  {result.warnings.length > 0 && (
+                    <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+                      <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                      <div>
+                        <p className="font-medium">Warnings</p>
+                        <ul className="mt-1 list-disc space-y-0.5 pl-4 text-amber-600">
+                          {result.warnings.map((w, i) => (
+                            <li key={i}>{w}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {parsed && result && (
+            <>
+              <Card className="border-[#D6D0BE] shadow-sm">
                 <button
-                  onClick={handleImport}
-                  disabled={uploading}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#7D6B3D] px-4 py-2.5 text-sm font-medium text-[#F5F2E9] hover:bg-[#6A5A32] disabled:opacity-50"
+                  type="button"
+                  onClick={() => setShowPersons(!showPersons)}
+                  className="flex w-full items-center justify-between p-4 text-left"
                 >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="size-4 animate-spin" />
-                      Importing...
-                    </>
+                  <div className="flex items-center gap-2">
+                    <UsersIcon className="size-4 text-[#7D6B3D]" />
+                    <span className="text-sm font-medium text-[#2D2926]">
+                      Individuals ({parsed.persons.length})
+                    </span>
+                  </div>
+                  {showPersons ? (
+                    <ChevronUp className="size-4 text-[#8C8782]" />
                   ) : (
-                    <>
-                      <Upload className="size-4" />
-                      Import to {selectedTree?.name ?? 'Tree'}
-                    </>
+                    <ChevronDown className="size-4 text-[#8C8782]" />
                   )}
                 </button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                {showPersons && (
+                  <div className="max-h-80 overflow-auto border-t border-[#D6D0BE]">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-[#F5F2E9]">
+                        <tr>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">#</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Name</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Gender</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Born</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Died</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parsed.persons.map((p) => (
+                          <tr key={p.idx} className="border-t border-[#E8E4D8]">
+                            <td className="px-4 py-2 text-[#8C8782]">{p.idx + 1}</td>
+                            <td className="px-4 py-2 font-medium text-[#2D2926]">
+                              {p.first_name} {p.last_name}
+                            </td>
+                            <td className="px-4 py-2">
+                              <GenderIcon gender={p.gender} />
+                              <span className="text-[#5E5954]">
+                                {p.gender === 'male' ? 'Male' : p.gender === 'female' ? 'Female' : '—'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 text-[#5E5954]">{p.date_of_birth || '—'}</td>
+                            <td className="px-4 py-2 text-[#5E5954]">{p.date_of_death || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+
+              <Card className="border-[#D6D0BE] shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setShowRelationships(!showRelationships)}
+                  className="flex w-full items-center justify-between p-4 text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <HeartIcon className="size-4 text-[#7D6B3D]" />
+                    <span className="text-sm font-medium text-[#2D2926]">
+                      Relationships ({parsed.relationships.length})
+                    </span>
+                  </div>
+                  {showRelationships ? (
+                    <ChevronUp className="size-4 text-[#8C8782]" />
+                  ) : (
+                    <ChevronDown className="size-4 text-[#8C8782]" />
+                  )}
+                </button>
+                {showRelationships && (
+                  <div className="max-h-80 overflow-auto border-t border-[#D6D0BE]">
+                    <table className="w-full text-sm">
+                      <thead className="sticky top-0 bg-[#F5F2E9]">
+                        <tr>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">#</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Person A</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Type</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Person B</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parsed.relationships.map((r, i) => {
+                          const a = parsed.persons[r.person_a_id];
+                          const b = parsed.persons[r.person_b_id];
+                          return (
+                            <tr key={i} className="border-t border-[#E8E4D8]">
+                              <td className="px-4 py-2 text-[#8C8782]">{i + 1}</td>
+                              <td className="px-4 py-2 text-[#2D2926]">
+                                {a ? `${a.first_name} ${a.last_name}` : `#${r.person_a_id}`}
+                              </td>
+                              <td className="px-4 py-2 capitalize text-[#5E5954]">{r.type}</td>
+                              <td className="px-4 py-2 text-[#2D2926]">
+                                {b ? `${b.first_name} ${b.last_name}` : `#${r.person_b_id}`}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </Card>
+
+              <button
+                type="button"
+                onClick={handleImport}
+                disabled={uploading}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#7D6B3D] px-4 py-2.5 text-sm font-medium text-[#F5F2E9] hover:bg-[#6A5A32] disabled:opacity-50"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="size-4" />
+                    Import {parsed.persons.length} people to {selectedTree?.name ?? 'Tree'}
+                  </>
+                )}
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </>
   );

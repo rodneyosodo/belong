@@ -117,8 +117,8 @@
 - [x] GEDCOM exporter — export tree data to GEDCOM 5.5.1 format
 - [x] Import page with file upload, error handling, success summary
 - [x] Server-side import with transaction (rollback on failure)
-- [ ] Import preview — show what will be imported before committing
-- [ ] Error handling — handle malformed GEDCOM files gracefully
+- [x] Import preview — show what will be imported before committing
+- [x] Error handling — handle malformed GEDCOM files gracefully
 
 ## Phase 9: Export & Sharing
 
