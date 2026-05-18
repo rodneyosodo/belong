@@ -28,6 +28,17 @@ export const Route = createFileRoute('/_shell/')({
   component: HomePage,
 });
 
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `Updated ${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Updated ${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `Updated ${days}d ago`;
+  return `Updated ${Math.floor(days / 7)}w ago`;
+}
+
 function HomePage() {
   const [newTreeOpen, setNewTreeOpen] = useState(false);
   const [ownedTrees, setOwnedTrees] = useState<Tree[]>([]);
@@ -69,17 +80,6 @@ function HomePage() {
     { value: String(totalMembers), label: 'Total Members', icon: UsersIcon },
     { value: String(sharedTrees.length), label: 'Shared with Me', icon: UserPlusIcon },
   ];
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `Updated ${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `Updated ${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `Updated ${days}d ago`;
-    return `Updated ${Math.floor(days / 7)}w ago`;
-  };
 
   return (
     <>

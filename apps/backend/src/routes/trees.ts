@@ -241,10 +241,8 @@ export const treeRoutes = new Elysia({ prefix: '/api/trees' })
     );
 
     const layouts: Record<string, Record<string, { x: number; y: number }>> = {};
-    let activeMode = 'TB';
     for (const row of rows) {
       layouts[row.layout_mode] = row.node_positions;
-      activeMode = row.layout_mode;
     }
 
     const lastRow = rows.length > 0 ? rows[rows.length - 1] : null;

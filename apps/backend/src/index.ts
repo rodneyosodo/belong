@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { cors } from '@elysiajs/cors';
 import { Elysia, Context } from 'elysia';
 

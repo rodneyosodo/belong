@@ -345,9 +345,9 @@ function ImportPage() {
     setFileName(file.name);
     setLoading(true);
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.addEventListener('load', (evt) => {
       try {
-        const text = evt.target?.result as string;
+        const text = (evt.target as FileReader)?.result as string;
         if (!text || text.length === 0) {
           throw new Error('File is empty.');
         }
@@ -371,11 +371,11 @@ function ImportPage() {
         parsedRef.current = null;
       }
       setLoading(false);
-    };
-    reader.onerror = () => {
+    });
+    reader.addEventListener('error', () => {
       setError('Failed to read file. Please try again.');
       setLoading(false);
-    };
+    });
     reader.readAsText(file);
   };
 

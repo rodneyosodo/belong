@@ -1,4 +1,4 @@
-import dagre from '@dagrejs/dagre';
+import { graphlib, layout as dagreLayout } from '@dagrejs/dagre';
 import { useNavigate } from '@tanstack/react-router';
 import { Skeleton } from '@workspace/ui/components/skeleton';
 import {
@@ -45,7 +45,7 @@ import FamilyTreeNode from './family-tree-node';
 import type { FamilyNodeData } from './family-tree-node';
 import { NodeContextMenu, type ContextMenuAction } from './node-context-menu';
 
-const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+const dagreGraph = new graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 
 const nodeWidth = 172;
 const nodeHeight = 64;
@@ -79,7 +79,7 @@ function getLayoutedElements(
     dagreGraph.setEdge(edge.source, edge.target);
   });
 
-  dagre.layout(dagreGraph);
+  dagreLayout(dagreGraph);
 
   const newNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
@@ -354,12 +354,9 @@ function getFreeFormPosition(
       return { x: targetNode.position.x, y: targetNode.position.y + nodeHeight + spacing };
     case 'spouse':
       return { x: targetNode.position.x + nodeWidth + spacing, y: targetNode.position.y };
-    case 'parent':
-      return { x: targetNode.position.x, y: targetNode.position.y - nodeHeight - spacing };
     case 'sibling':
     case 'half-sibling':
       return { x: targetNode.position.x + nodeWidth + spacing, y: targetNode.position.y };
-    case 'parent':
     case 'step-parent':
     case 'adopted-parent':
       return { x: targetNode.position.x, y: targetNode.position.y - nodeHeight - spacing };
@@ -628,8 +625,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         setNodes(layouted.nodes);
         setEdges(layouted.edges);
       }
-    } catch (err) {
-      console.error('Failed to load tree data:', err);
+    } catch {
     } finally {
       setLoading(false);
     }
@@ -676,7 +672,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
       const img = new Image();
       img.src = dataUrl;
       await new Promise<void>((resolve) => {
-        img.onload = () => resolve();
+        img.addEventListener('load', () => resolve(), { once: true });
       });
       const orientation = img.width > img.height ? 'landscape' : 'portrait';
       const pdf = new jsPDF({ orientation, unit: 'px', format: [img.width, img.height] });
@@ -722,8 +718,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
           });
         }
         await layoutApi.save(treeId, { layout_mode: mode, node_positions: positions });
-      } catch (err) {
-        console.error('Failed to persist layout:', err);
+      } catch {
       }
     },
     [treeId],
@@ -740,8 +735,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         positions[node.id] = { x: node.position.x, y: node.position.y };
         savedLayouts.current['FREE'] = positions;
         await layoutApi.save(treeId, { layout_mode: 'FREE', node_positions: positions });
-      } catch (err) {
-        console.error('Failed to persist position:', err);
+      } catch {
       }
     },
     [layoutMode, treeId, nodes],
@@ -841,7 +835,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         targetData: contextMenu.nodeData,
       });
     },
-    [contextMenu, edges],
+    [contextMenu, edges, navigate],
   );
 
   const handleDeleteConfirm = useCallback(async () => {
@@ -906,8 +900,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
       const newNodes = nodes.filter((n) => n.id !== nodeId);
       const newEdges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
       relayout(newNodes, newEdges);
-    } catch (err) {
-      console.error('Failed to delete person:', err);
+    } catch {
     }
 
     setDeleteState((prev) => ({ ...prev, open: false }));
@@ -986,8 +979,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
           });
           relayout(updatedNodes, edges);
         }
-      } catch (err) {
-        console.error('Failed to update person:', err);
+      } catch {
       }
 
       setEditState((prev) => ({ ...prev, open: false }));
@@ -1206,8 +1198,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         const allEdges = [...edges, ...newEdges];
         setDialogState((prev) => ({ ...prev, open: false }));
         relayout(allNodes, allEdges);
-      } catch (err) {
-        console.error('Failed to create person:', err);
+      } catch {
       }
     },
     [dialogState, nodes, edges, relayout, treeId, layoutMode, history],
@@ -1216,12 +1207,12 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
   const handleUndo = useCallback(async () => {
     await history.undo();
     await loadTreeData();
-  }, [history.undo, loadTreeData]);
+  }, [history, loadTreeData]);
 
   const handleRedo = useCallback(async () => {
     await history.redo();
     await loadTreeData();
-  }, [history.redo, loadTreeData]);
+  }, [history, loadTreeData]);
 
   const handleUndoRef = useRef(handleUndo);
   handleUndoRef.current = handleUndo;

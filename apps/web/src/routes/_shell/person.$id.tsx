@@ -154,8 +154,7 @@ function PersonPage() {
       }
       setRelations(relList);
       setEvents(allEvents);
-    } catch (err) {
-      console.error('Failed to load person:', err);
+    } catch {
     } finally {
       setLoading(false);
     }

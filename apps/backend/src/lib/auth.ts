@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { betterAuth } from 'better-auth';
 import { username } from 'better-auth/plugins';
 import { anonymous } from 'better-auth/plugins';

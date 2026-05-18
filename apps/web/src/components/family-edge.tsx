@@ -29,7 +29,7 @@ function nodeCenterX(node: Node): number {
 
 export function FamilyEdge({
   source,
-  target,
+  target: _target,
   sourceX,
   sourceY,
   targetX,
@@ -56,7 +56,7 @@ export function FamilyEdge({
     const midX = (nodeCenterX(sourceNode) + nodeCenterX(spouseNode)) / 2;
 
     return `M ${sourceX} ${sourceY} L ${midX} ${sourceY} L ${midX} ${targetY} L ${targetX} ${targetY}`;
-  }, [source, target, sourceX, sourceY, targetX, targetY, relType, nodes, edges]);
+  }, [source, sourceX, sourceY, targetX, targetY, relType, nodes, edges]);
 
   const style = REL_STYLES[relType] || REL_STYLES.child;
 

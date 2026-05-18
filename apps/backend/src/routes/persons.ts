@@ -37,8 +37,8 @@ async function checkAccess(
   return { session: null, org: null, isMember: false };
 }
 
-async function fetchPersonById(pool: any, personId: string) {
-  const { rows } = await pool.query(
+async function fetchPersonById(db: any, personId: string) {
+  const { rows } = await db.query(
     `SELECT id, organization_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata, created_at, updated_at FROM persons WHERE id = $1`,
     [personId],
   );
@@ -337,14 +337,6 @@ export const personRoutes = new Elysia({ prefix: '/api/trees' })
     const { rows: aRels } = await pool.query(
       `SELECT person_b_id FROM relationships WHERE organization_id = $1 AND person_a_id = $2 AND type = 'parent'`,
       [treeId, body.person_a_id],
-    );
-    const { rows: bAsParent } = await pool.query(
-      `SELECT person_b_id FROM relationships WHERE organization_id = $1 AND person_a_id = $2 AND type IN ('parent', 'step-parent')`,
-      [treeId, body.person_b_id],
-    );
-    const { rows: bAsChild } = await pool.query(
-      `SELECT person_a_id FROM relationships WHERE organization_id = $1 AND person_b_id = $2 AND type IN ('child', 'adopted', 'step-child')`,
-      [treeId, body.person_b_id],
     );
 
     if (body.type === 'spouse') {

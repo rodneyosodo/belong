@@ -31,8 +31,8 @@ export function useHistory() {
       await entry.undo();
       pastRef.current = pastRef.current.slice(0, -1);
       futureRef.current = [entry, ...futureRef.current];
-    } catch (err) {
-      console.error('Undo failed:', err);
+    } catch {
+      pastRef.current = pastRef.current.slice(0, -1);
     } finally {
       busyRef.current = false;
       bump();
@@ -47,8 +47,8 @@ export function useHistory() {
       await entry.redo();
       futureRef.current = futureRef.current.slice(1);
       pastRef.current = [...pastRef.current, entry];
-    } catch (err) {
-      console.error('Redo failed:', err);
+    } catch {
+      futureRef.current = futureRef.current.slice(1);
     } finally {
       busyRef.current = false;
       bump();
