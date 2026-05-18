@@ -10,8 +10,8 @@
     "preview": "vite preview",
     "lint": "oxlint --ignore-pattern src/routeTree.gen.ts",
     "format": "oxfmt 'src/**' '!src/routeTree.gen.ts'",
-    "docker:build": "tag=${TAG:-latest} && docker build -t ghcr.io/rodneyosodo/belong-web:$tag -t ghcr.io/rodneyosodo/belong-web:latest --build-arg VERSION=$(node -p 'require(\"./package.json\").version') --build-arg REVISION=$(git rev-parse HEAD 2>/dev/null || echo unknown) --build-arg CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ) -f Dockerfile ../..",
-    "docker:push": "tag=${TAG:-latest} && docker push ghcr.io/rodneyosodo/belong-web:$tag && docker push ghcr.io/rodneyosodo/belong-web:latest"
+    "docker:build": "tag=${TAG:-latest} && docker build -t ghcr.io/rodneyosodo/belong/web:$tag -t ghcr.io/rodneyosodo/belong/web:latest --build-arg VERSION=$(node -p 'require(\"./package.json\").version') --build-arg REVISION=$(git rev-parse HEAD 2>/dev/null || echo unknown) --build-arg CREATED=$(date -u +%Y-%m-%dT%H:%M:%SZ) -f Dockerfile ../..",
+    "docker:push": "tag=${TAG:-latest} && docker push ghcr.io/rodneyosodo/belong/web:$tag && docker push ghcr.io/rodneyosodo/belong/web:latest"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.0.0",
