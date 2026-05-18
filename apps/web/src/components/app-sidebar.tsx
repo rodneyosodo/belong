@@ -91,7 +91,9 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton onClick={() => navigate({ to: '/import' })}>
+              <SidebarMenuButton
+                onClick={() => navigate({ to: '/import', search: { treeId: '' } })}
+              >
                 <UploadIcon />
                 <span>Import GEDCOM</span>
               </SidebarMenuButton>

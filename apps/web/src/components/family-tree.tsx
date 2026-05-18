@@ -18,7 +18,7 @@ import {
   type Edge,
   type NodeTypes,
   type NodeMouseHandler,
-  type NodeDragHandler,
+  type OnNodeDrag,
 } from '@xyflow/react';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
@@ -510,8 +510,8 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
   { treeId },
   ref,
 ) {
-  const [nodes, setNodes, onNodesChange] = useNodesState<FamilyNodeData>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<FamilyNodeData>>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [loading, setLoading] = useState(true);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('TB');
   const savedLayouts = useRef<Record<string, Record<string, { x: number; y: number }>>>({});
@@ -723,12 +723,12 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
     [treeId],
   );
 
-  const onNodeDragStop: NodeDragHandler = useCallback(
+  const onNodeDragStop: OnNodeDrag<Node<FamilyNodeData>> = useCallback(
     async (_event, node) => {
       if (layoutMode !== 'FREE') return;
       try {
         const positions: Record<string, { x: number; y: number }> = {};
-        (nodes as Node<FamilyNodeData>[]).forEach((n) => {
+        nodes.forEach((n) => {
           positions[n.id] = { x: n.position.x, y: n.position.y };
         });
         positions[node.id] = { x: node.position.x, y: node.position.y };

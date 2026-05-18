@@ -98,7 +98,7 @@ export function MembersPanel({ treeId }: MembersPanelProps) {
       await authClient.organization.setActive({ organizationId: treeId });
       const { error } = await authClient.organization.inviteMember({
         email: inviteEmail.trim(),
-        role: inviteRole,
+        role: inviteRole as 'admin' | 'member',
       });
       if (error) throw error;
       toast.success(`Invitation sent to ${inviteEmail.trim()}`);
@@ -111,7 +111,7 @@ export function MembersPanel({ treeId }: MembersPanelProps) {
     }
   };
 
-  const handleRemoveMember = async (memberId: string, memberEmail: string) => {
+  const handleRemoveMember = async (_memberId: string, memberEmail: string) => {
     if (!confirm(`Remove ${memberEmail} from this tree?`)) return;
     try {
       await authClient.organization.setActive({ organizationId: treeId });

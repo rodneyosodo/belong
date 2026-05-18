@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -414,9 +414,7 @@ function ImportPage() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink asChild>
-                  <Link to="/">Lineage</Link>
-                </BreadcrumbLink>
+                <BreadcrumbLink href="/">Lineage</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>

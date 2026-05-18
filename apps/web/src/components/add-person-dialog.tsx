@@ -73,6 +73,41 @@ const actionMeta: Record<
     title: 'Add Sibling',
     description: 'Add a sibling to this family member',
   },
+  'half-sibling': {
+    icon: UserPlusIcon,
+    title: 'Add Half-Sibling',
+    description: 'Add a half-sibling to this family member',
+  },
+  adopted: {
+    icon: UserPlusIcon,
+    title: 'Add Adopted Child',
+    description: 'Add an adopted child',
+  },
+  'adopted-parent': {
+    icon: ArrowUpIcon,
+    title: 'Add Adopted Parent',
+    description: 'Add an adopted parent',
+  },
+  'step-child': {
+    icon: BabyIcon,
+    title: 'Add Step-Child',
+    description: 'Add a step-child',
+  },
+  'step-parent': {
+    icon: ArrowUpIcon,
+    title: 'Add Step-Parent',
+    description: 'Add a step-parent',
+  },
+  view: {
+    icon: HeartIcon,
+    title: '',
+    description: '',
+  },
+  edit: {
+    icon: HeartIcon,
+    title: '',
+    description: '',
+  },
   delete: {
     icon: HeartIcon,
     title: '',
