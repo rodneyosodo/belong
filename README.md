@@ -144,4 +144,4 @@ bun run docker:down
 
 ## License
 
-[MIT](LICENSE)
+[Apache](LICENSE)
