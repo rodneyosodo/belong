@@ -13,7 +13,7 @@ COPY packages/ui/ ./packages/ui/
 
 RUN bun run --cwd apps/web build
 
-FROM nginx:1.27-alpine AS run
+FROM nginx:1.31-alpine AS run
 
 ARG VERSION
 ARG REVISION
