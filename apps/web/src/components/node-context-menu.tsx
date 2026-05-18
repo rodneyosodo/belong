@@ -5,6 +5,7 @@ import {
   ArrowUpIcon,
   Trash2Icon,
   PencilIcon,
+  EyeIcon,
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
@@ -14,6 +15,7 @@ export type ContextMenuAction =
   | 'parent'
   | 'sibling'
   | 'edit'
+  | 'view'
   | 'delete'
   | 'add';
 
@@ -30,6 +32,7 @@ const actions: {
   label: string;
   icon: typeof UserPlusIcon;
 }[] = [
+  { action: 'view', label: 'View Person', icon: EyeIcon },
   { action: 'edit', label: 'Edit Person', icon: PencilIcon },
   { action: 'spouse', label: 'Add Spouse', icon: HeartIcon },
   { action: 'child', label: 'Add Child', icon: BabyIcon },

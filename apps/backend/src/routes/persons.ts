@@ -37,6 +37,30 @@ async function checkAccess(
   return { session: null, org: null, isMember: false };
 }
 
+async function fetchPersonById(pool: any, personId: string) {
+  const { rows } = await pool.query(
+    `SELECT id, organization_id, first_name, last_name, gender, birth_date, death_date, bio, avatar_url, is_deceased, metadata, created_at, updated_at FROM persons WHERE id = $1`,
+    [personId],
+  );
+  if (rows.length === 0) return null;
+  const r = rows[0];
+  return {
+    id: r.id,
+    tree_id: r.organization_id,
+    first_name: r.first_name,
+    last_name: r.last_name,
+    gender: r.gender,
+    date_of_birth: r.birth_date,
+    date_of_death: r.death_date,
+    bio: r.bio,
+    avatar_url: r.avatar_url,
+    is_deceased: r.is_deceased,
+    metadata: r.metadata,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  };
+}
+
 export const personRoutes = new Elysia({ prefix: '/api/trees' })
   .get('/:id/persons', async (context) => {
     const treeId = (context.params as { id: string }).id;
@@ -356,4 +380,22 @@ export const personRoutes = new Elysia({ prefix: '/api/trees' })
     } finally {
       client.release();
     }
+  });
+
+export const singletonPersonRoutes = new Elysia({ prefix: '/api/persons' })
+  .get('/:personId', async (context) => {
+    const { personId } = context.params as { personId: string };
+    const person = await fetchPersonById(pool, personId);
+    if (!person) {
+      context.set.status = 404;
+      return { error: 'Person not found' };
+    }
+
+    const result = await checkAccess(context, person.tree_id, false);
+    if (!result) {
+      context.set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    return person;
   });

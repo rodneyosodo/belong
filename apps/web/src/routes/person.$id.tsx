@@ -1,8 +1,19 @@
 import { createFileRoute, Link, useParams } from '@tanstack/react-router';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@workspace/ui/components/breadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui/components/card';
+import { Separator } from '@workspace/ui/components/separator';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { AppSidebar } from '@/components/app-sidebar';
 import type { FamilyNodeData } from '@/components/family-tree-node';
 import { personApi, relationshipApi, type Person, type Relationship } from '@/lib/api';
 
@@ -33,18 +44,13 @@ function PersonPage() {
   useEffect(() => {
     (async () => {
       try {
-        const allPersons = await personApi.list(id);
-        const p = allPersons.find((x) => x.id === id);
-        if (!p) {
-          setLoading(false);
-          return;
-        }
+        const p = await personApi.get(id);
         setPerson(p);
 
         const treeId = p.tree_id;
         const [allRels, allPersonsForTree] = await Promise.all([
           relationshipApi.list(treeId),
-          Promise.resolve(allPersons),
+          personApi.list(treeId),
         ]);
 
         const personMap = new Map(allPersonsForTree.map((x) => [x.id, x]));
@@ -86,12 +92,24 @@ function PersonPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center text-[#8C8782]">Loading...</div>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <div className="flex h-screen items-center justify-center text-[#8C8782]">Loading...</div>
+        </SidebarInset>
+      </SidebarProvider>
     );
   }
 
   if (!person) {
-    return <div className="p-8 text-[#8C8782]">Person not found</div>;
+    return (
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <div className="p-8 text-[#8C8782]">Person not found</div>
+        </SidebarInset>
+      </SidebarProvider>
+    );
   }
 
   const data: Partial<FamilyNodeData> = {
@@ -114,18 +132,39 @@ function PersonPage() {
     .slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-[#F5F2E9]">
-      <div className="mx-auto max-w-5xl p-6">
-        <Link
-          to="/tree/$id"
-          params={{ id: person.tree_id }}
-          className="mb-6 inline-flex items-center gap-1.5 text-xs text-[#8C8782] hover:text-[#2D2926]"
-        >
-          <ArrowLeft className="size-3.5" />
-          Back to tree
-        </Link>
-
-        <Card className="mb-6 border-[#D6D0BE] shadow-sm">
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="/">Lineage</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <Link
+                    to="/tree/$id"
+                    params={{ id: person.tree_id }}
+                    className="hover:text-[#2D2926]"
+                  >
+                    Tree
+                  </Link>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{data.label}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
+        <div className="flex-1 bg-[#F5F2E9]">
+          <div className="mx-auto max-w-5xl p-6">
+            <Card className="mb-6 border-[#D6D0BE] shadow-sm">
           <CardContent className="flex items-center gap-5 p-6">
             {data.photo ? (
               <img
@@ -255,8 +294,10 @@ function PersonPage() {
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

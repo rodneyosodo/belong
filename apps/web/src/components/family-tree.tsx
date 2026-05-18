@@ -29,6 +29,7 @@ import {
 
 import '@xyflow/react/dist/style.css';
 
+import { useNavigate } from '@tanstack/react-router';
 import { useHistory, type HistoryEntry } from '@/hooks/use-history';
 import { personApi, relationshipApi, type Person, type Relationship } from '@/lib/api';
 
@@ -378,6 +379,8 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
   const [loading, setLoading] = useState(true);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('TB');
 
+  const navigate = useNavigate();
+
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -515,13 +518,8 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
   );
 
   const onNodeClick = useCallback<NodeMouseHandler>((_, node) => {
-    const nodeData = node.data as unknown as FamilyNodeData;
-    setEditState({
-      open: true,
-      personId: node.id,
-      personData: nodeData,
-    });
-  }, []);
+    navigate({ to: '/person/$id', params: { id: node.id } });
+  }, [navigate]);
 
   const onNodeContextMenu = useCallback<NodeMouseHandler>((event, node) => {
     event.preventDefault();
@@ -552,6 +550,10 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
   const handleContextMenuAction = useCallback(
     (action: ContextMenuAction) => {
       if (!contextMenu) return;
+      if (action === 'view') {
+        navigate({ to: '/person/$id', params: { id: contextMenu.nodeId } });
+        return;
+      }
       if (action === 'delete') {
         const relCount = edges.filter(
           (e) => e.source === contextMenu.nodeId || e.target === contextMenu.nodeId,

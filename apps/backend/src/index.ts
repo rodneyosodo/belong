@@ -3,7 +3,7 @@ import { Elysia, Context } from 'elysia';
 
 import { auth } from './lib/auth';
 import { runMigrations } from './lib/migrate';
-import { personRoutes } from './routes/persons';
+import { personRoutes, singletonPersonRoutes } from './routes/persons';
 import { treeRoutes } from './routes/trees';
 
 const betterAuthView = (context: Context) => {
@@ -33,6 +33,7 @@ const start = async () => {
     .all('/api/auth/*', betterAuthView)
     .use(treeRoutes)
     .use(personRoutes)
+    .use(singletonPersonRoutes)
     .post('/api/upload/avatar', async (context) => {
       const formData = await context.request.formData();
       const file = formData.get('file');

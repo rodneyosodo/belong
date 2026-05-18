@@ -85,6 +85,8 @@ export interface Relationship {
 }
 
 export const personApi = {
+  get: (personId: string) => request<Person>(`/api/persons/${personId}`),
+
   list: (treeId: string) => request<Person[]>(`/api/trees/${treeId}/persons`),
 
   create: (treeId: string, data: Partial<Person>) =>
