@@ -20,6 +20,7 @@ import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { useTheme } from '@workspace/ui/components/theme-provider';
 import { ToggleGroup, ToggleGroupItem } from '@workspace/ui/components/toggle-group';
 import {
   Eye,
@@ -36,7 +37,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { AppSidebar } from '@/components/app-sidebar';
-import { useTheme } from '@workspace/ui/components/theme-provider';
 import { authClient } from '@/lib/auth-client';
 import { env } from '@/lib/env';
 

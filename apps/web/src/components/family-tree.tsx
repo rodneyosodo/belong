@@ -718,8 +718,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
           });
         }
         await layoutApi.save(treeId, { layout_mode: mode, node_positions: positions });
-      } catch {
-      }
+      } catch {}
     },
     [treeId],
   );
@@ -735,8 +734,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         positions[node.id] = { x: node.position.x, y: node.position.y };
         savedLayouts.current['FREE'] = positions;
         await layoutApi.save(treeId, { layout_mode: 'FREE', node_positions: positions });
-      } catch {
-      }
+      } catch {}
     },
     [layoutMode, treeId, nodes],
   );
@@ -900,8 +898,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
       const newNodes = nodes.filter((n) => n.id !== nodeId);
       const newEdges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
       relayout(newNodes, newEdges);
-    } catch {
-    }
+    } catch {}
 
     setDeleteState((prev) => ({ ...prev, open: false }));
   }, [deleteState, treeId, nodes, edges, relayout, history]);
@@ -979,8 +976,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
           });
           relayout(updatedNodes, edges);
         }
-      } catch {
-      }
+      } catch {}
 
       setEditState((prev) => ({ ...prev, open: false }));
     },
@@ -1198,8 +1194,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         const allEdges = [...edges, ...newEdges];
         setDialogState((prev) => ({ ...prev, open: false }));
         relayout(allNodes, allEdges);
-      } catch {
-      }
+      } catch {}
     },
     [dialogState, nodes, edges, relayout, treeId, layoutMode, history],
   );

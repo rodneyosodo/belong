@@ -1,11 +1,10 @@
 import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { ThemeProvider } from '@workspace/ui/components/theme-provider';
 import { TooltipProvider } from '@workspace/ui/components/tooltip';
-import { StrictMode } from 'react';
 
 import '@workspace/ui/globals.css';
+import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
-
-import { ThemeProvider } from '@workspace/ui/components/theme-provider';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
