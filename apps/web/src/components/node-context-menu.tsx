@@ -6,6 +6,8 @@ import {
   Trash2Icon,
   PencilIcon,
   EyeIcon,
+  UsersIcon,
+  HomeIcon,
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
@@ -14,6 +16,9 @@ export type ContextMenuAction =
   | 'child'
   | 'parent'
   | 'sibling'
+  | 'adopted'
+  | 'step-child'
+  | 'step-parent'
   | 'edit'
   | 'view'
   | 'delete'
@@ -38,6 +43,9 @@ const actions: {
   { action: 'child', label: 'Add Child', icon: BabyIcon },
   { action: 'parent', label: 'Add Parent', icon: ArrowUpIcon },
   { action: 'sibling', label: 'Add Sibling', icon: UserPlusIcon },
+  { action: 'adopted', label: 'Add Adopted Child', icon: UsersIcon },
+  { action: 'step-child', label: 'Add Step-Child', icon: HomeIcon },
+  { action: 'step-parent', label: 'Add Step-Parent', icon: HomeIcon },
 ];
 
 export function NodeContextMenu({ x, y, label, onAction, onClose }: NodeContextMenuProps) {

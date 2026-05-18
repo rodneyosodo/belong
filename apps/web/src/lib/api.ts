@@ -130,6 +130,22 @@ export const relationshipApi = {
     }),
 };
 
+export interface TreeLayout {
+  layout_mode: 'TB' | 'LR' | 'FREE';
+  node_positions: Record<string, { x: number; y: number }>;
+  layouts: Record<string, Record<string, { x: number; y: number }>>;
+}
+
+export const layoutApi = {
+  get: (treeId: string) => request<TreeLayout>(`/api/trees/${treeId}/layout`),
+
+  save: (treeId: string, data: Partial<TreeLayout>) =>
+    request<TreeLayout>(`/api/trees/${treeId}/layout`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+};
+
 export interface ImportResult {
   success: boolean;
   person_count: number;

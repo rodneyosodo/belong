@@ -3,6 +3,16 @@ import { useMemo } from 'react';
 
 const NODE_WIDTH = 172;
 
+const REL_STYLES: Record<string, { stroke: string; strokeWidth: number; dashArray?: string }> = {
+  spouse: { stroke: '#7D6B3D', strokeWidth: 2 },
+  parent: { stroke: '#5E5954', strokeWidth: 1.5 },
+  child: { stroke: '#5E5954', strokeWidth: 1.5 },
+  adopted: { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3' },
+  'step-parent': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4' },
+  'step-child': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4' },
+  sibling: { stroke: '#16A34A', strokeWidth: 1.5, dashArray: '8 4' },
+};
+
 function findSpouse(nodeId: string, allEdges: Edge[]): string | null {
   const edge = allEdges.find(
     (e) => e.label === 'spouse' && (e.source === nodeId || e.target === nodeId),
@@ -44,14 +54,15 @@ export function FamilyEdge({
     return `M ${sourceX} ${sourceY} L ${midX} ${sourceY} L ${midX} ${targetY} L ${targetX} ${targetY}`;
   }, [source, target, sourceX, sourceY, targetX, targetY, label, nodes, edges]);
 
-  const strokeColor = label === 'spouse' ? '#7D6B3D' : '#8C8782';
-  const strokeWidth = label === 'spouse' ? 2 : 1.5;
+  const relType = (label as string) || 'child';
+  const style = REL_STYLES[relType] || REL_STYLES.child;
 
   return (
     <path
       d={path}
-      stroke={strokeColor}
-      strokeWidth={strokeWidth}
+      stroke={style.stroke}
+      strokeWidth={style.strokeWidth}
+      strokeDasharray={style.dashArray}
       fill="none"
       className="react-flow__edge-path"
     />

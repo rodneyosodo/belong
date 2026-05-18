@@ -226,4 +226,63 @@ export const treeRoutes = new Elysia({ prefix: '/api/trees' })
     });
 
     return { success: true };
+  })
+  .get('/:id/layout', async (context) => {
+    const treeId = (context.params as { id: string }).id;
+    const session = await getSession(context);
+    if (!session?.user?.id) {
+      context.set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const { rows } = await pool.query(
+      `SELECT layout_mode, node_positions FROM tree_layouts WHERE organization_id = $1`,
+      [treeId],
+    );
+
+    const layouts: Record<string, Record<string, { x: number; y: number }>> = {};
+    let activeMode = 'TB';
+    for (const row of rows) {
+      layouts[row.layout_mode] = row.node_positions;
+      activeMode = row.layout_mode;
+    }
+
+    const lastRow = rows.length > 0 ? rows[rows.length - 1] : null;
+
+    return {
+      layout_mode: lastRow?.layout_mode ?? 'TB',
+      node_positions: lastRow?.node_positions ?? {},
+      layouts,
+    };
+  })
+  .put('/:id/layout', async (context) => {
+    const treeId = (context.params as { id: string }).id;
+    const session = await getSession(context);
+    if (!session?.user?.id) {
+      context.set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const body = context.body as {
+      layout_mode?: string;
+      node_positions?: Record<string, { x: number; y: number }>;
+    };
+
+    const mode = body.layout_mode ?? 'TB';
+    const positions = body.node_positions ?? {};
+
+    if (!['TB', 'LR', 'FREE'].includes(mode)) {
+      context.set.status = 400;
+      return { error: 'Invalid layout_mode' };
+    }
+
+    await pool.query(
+      `INSERT INTO tree_layouts (organization_id, layout_mode, node_positions, updated_at)
+       VALUES ($1, $2, $3, now())
+       ON CONFLICT (organization_id, layout_mode)
+       DO UPDATE SET node_positions = $3, updated_at = now()`,
+      [treeId, mode, JSON.stringify(positions)],
+    );
+
+    return { layout_mode: mode, node_positions: positions };
   });

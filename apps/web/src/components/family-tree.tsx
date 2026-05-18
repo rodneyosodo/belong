@@ -16,6 +16,7 @@ import {
   type Edge,
   type NodeTypes,
   type NodeMouseHandler,
+  type NodeDragHandler,
 } from '@xyflow/react';
 import {
   forwardRef,
@@ -33,7 +34,7 @@ import '@xyflow/react/dist/style.css';
 
 import { useNavigate } from '@tanstack/react-router';
 import { useHistory, type HistoryEntry } from '@/hooks/use-history';
-import { personApi, relationshipApi, type Person, type Relationship } from '@/lib/api';
+import { personApi, relationshipApi, layoutApi, type Person, type Relationship } from '@/lib/api';
 
 import { AddPersonDialog, type PersonFormData } from './add-person-dialog';
 import { DeleteConfirmDialog } from './delete-confirm-dialog';
@@ -138,7 +139,8 @@ function getLayoutedElements(
 }
 
 function personToNode(p: Person): Node<FamilyNodeData> {
-  const gen = ((p.metadata as Record<string, unknown>)?.generation as number) ?? 0;
+  const meta = (p.metadata as Record<string, unknown>) ?? {};
+  const gen = (meta.generation as number) ?? 0;
   return {
     id: p.id,
     type: 'family',
@@ -159,21 +161,31 @@ function personToNode(p: Person): Node<FamilyNodeData> {
   };
 }
 
+const REL_STYLE: Record<string, { stroke: string; strokeWidth: number; dashArray?: string; edgeType: string; sourceHandle: string; targetHandle: string }> = {
+  spouse: { stroke: '#7D6B3D', strokeWidth: 2, edgeType: 'straight', sourceHandle: 'right', targetHandle: 'left' },
+  parent: { stroke: '#5E5954', strokeWidth: 1.5, edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
+  child: { stroke: '#5E5954', strokeWidth: 1.5, edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
+  adopted: { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
+  'step-parent': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
+  'step-child': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
+  sibling: { stroke: '#16A34A', strokeWidth: 1.5, dashArray: '8 4', edgeType: 'straight', sourceHandle: 'right', targetHandle: 'left' },
+};
+
 function relationshipToEdge(r: Relationship): Edge {
-  const isSpouse = r.type === 'spouse';
+  const s = REL_STYLE[r.type] || REL_STYLE.parent;
   return {
     id: r.id,
     source: r.person_a_id,
     target: r.person_b_id,
-    sourceHandle: isSpouse ? 'right' : 'bottom',
-    targetHandle: isSpouse ? 'left' : 'top',
-    type: isSpouse ? 'straight' : 'smoothstep',
-    style: isSpouse ? { stroke: '#7D6B3D' } : { stroke: '#8C8782', strokeWidth: 1.5 },
-    label: isSpouse ? 'spouse' : undefined,
+    sourceHandle: s.sourceHandle,
+    targetHandle: s.targetHandle,
+    type: s.edgeType,
+    style: { stroke: s.stroke, strokeWidth: s.strokeWidth },
+    label: r.type,
   };
 }
 
-function computeGeneration(personId: string, edges: Edge[], nodes: Node<FamilyNodeData>[]): number {
+function computeGeneration(personId: string, edges: Edge[], _nodes: Node<FamilyNodeData>[]): number {
   const visited = new Set<string>();
   function depth(id: string): number {
     if (visited.has(id)) return 0;
@@ -197,6 +209,34 @@ function findSpouse(nodeId: string, allEdges: Edge[]): string | null {
   );
   if (!spouseEdge) return null;
   return spouseEdge.source === nodeId ? spouseEdge.target : spouseEdge.source;
+}
+
+function validateRelationship(
+  action: ContextMenuAction,
+  targetId: string,
+  edges: Edge[],
+): string | null {
+  switch (action) {
+    case 'spouse':
+    case 'child':
+    case 'adopted':
+    case 'step-child': {
+      return null;
+    }
+    case 'parent':
+    case 'step-parent': {
+      const existingParentEdges = edges.filter(
+        (e) => e.target === targetId && e.source !== e.target && e.type === 'smoothstep' && e.label !== 'spouse' && e.label !== 'sibling',
+      );
+      if (existingParentEdges.length >= 2) return 'This person already has two parents';
+      return null;
+    }
+    case 'sibling': {
+      return null;
+    }
+    default:
+      return null;
+  }
 }
 
 function findMother(
@@ -380,6 +420,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('TB');
+  const savedLayouts = useRef<Record<string, Record<string, { x: number; y: number }>>>({});
 
   const navigate = useNavigate();
 
@@ -441,10 +482,16 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
 
   const loadTreeData = useCallback(async () => {
     try {
-      const [persons, relationships] = await Promise.all([
+      const [persons, relationships, layout] = await Promise.all([
         personApi.list(treeId),
         relationshipApi.list(treeId),
+        layoutApi.get(treeId),
       ]);
+
+      const mode: LayoutMode = layout.layout_mode ?? 'TB';
+      savedLayouts.current = layout.layouts ?? {};
+
+      const savedPositions = savedLayouts.current[mode] ?? layout.node_positions ?? {};
 
       const flowNodes = persons.map(personToNode);
       const flowEdges = relationships.map(relationshipToEdge);
@@ -454,15 +501,42 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         data.generation = computeGeneration(node.id, flowEdges, flowNodes);
       });
 
-      const layouted = getLayoutedElements(flowNodes, flowEdges, layoutMode);
-      setNodes(layouted.nodes);
-      setEdges(layouted.edges);
+      setLayoutMode(mode);
+
+      if (mode === 'FREE') {
+        flowNodes.forEach((node) => {
+          const pos = savedPositions[node.id];
+          if (pos) {
+            node.position = { x: pos.x, y: pos.y };
+          }
+        });
+        setNodes(flowNodes);
+        setEdges(flowEdges);
+      } else if (Object.keys(savedPositions).length > 0) {
+        flowNodes.forEach((node) => {
+          const pos = savedPositions[node.id];
+          if (pos) {
+            node.position = { x: pos.x, y: pos.y };
+          }
+        });
+        setNodes(flowNodes);
+        setEdges(flowEdges);
+      } else {
+        const layouted = getLayoutedElements(flowNodes, flowEdges, mode);
+        const positions: Record<string, { x: number; y: number }> = {};
+        layouted.nodes.forEach((n) => {
+          positions[n.id] = { x: n.position.x, y: n.position.y };
+        });
+        savedLayouts.current[mode] = positions;
+        setNodes(layouted.nodes);
+        setEdges(layouted.edges);
+      }
     } catch (err) {
       console.error('Failed to load tree data:', err);
     } finally {
       setLoading(false);
     }
-  }, [treeId, setNodes, setEdges, layoutMode]);
+  }, [treeId, setNodes, setEdges]);
 
   useEffect(() => {
     loadTreeData();
@@ -510,6 +584,41 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
     [layoutMode, setNodes, setEdges],
   );
 
+  const persistLayout = useCallback(
+    async (mode: LayoutMode, currentNodes?: Node<FamilyNodeData>[]) => {
+      try {
+        const positions: Record<string, { x: number; y: number }> = {};
+        if (currentNodes) {
+          currentNodes.forEach((n) => {
+            positions[n.id] = { x: n.position.x, y: n.position.y };
+          });
+        }
+        await layoutApi.save(treeId, { layout_mode: mode, node_positions: positions });
+      } catch (err) {
+        console.error('Failed to persist layout:', err);
+      }
+    },
+    [treeId],
+  );
+
+  const onNodeDragStop: NodeDragHandler = useCallback(
+    async (_event, node) => {
+      if (layoutMode !== 'FREE') return;
+      try {
+        const positions: Record<string, { x: number; y: number }> = {};
+        (nodes as Node<FamilyNodeData>[]).forEach((n) => {
+          positions[n.id] = { x: n.position.x, y: n.position.y };
+        });
+        positions[node.id] = { x: node.position.x, y: node.position.y };
+        savedLayouts.current['FREE'] = positions;
+        await layoutApi.save(treeId, { layout_mode: 'FREE', node_positions: positions });
+      } catch (err) {
+        console.error('Failed to persist position:', err);
+      }
+    },
+    [layoutMode, treeId, nodes],
+  );
+
   const onConnect = useCallback(
     (params: Connection) => {
       setEdges((eds) =>
@@ -536,17 +645,35 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
 
   const onLayout = useCallback(
     (mode: LayoutMode) => {
+      const currentNodes = nodes as Node<FamilyNodeData>[];
+
+      const prevPositions: Record<string, { x: number; y: number }> = {};
+      currentNodes.forEach((n) => {
+        prevPositions[n.id] = { x: n.position.x, y: n.position.y };
+      });
+      savedLayouts.current[layoutMode] = prevPositions;
+      persistLayout(layoutMode, currentNodes);
+
       setLayoutMode(mode);
-      if (mode === 'FREE') return;
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
-        nodes as Node<FamilyNodeData>[],
-        edges,
-        mode,
-      );
-      setNodes(layoutedNodes);
-      setEdges(layoutedEdges);
+
+      const savedPositions = savedLayouts.current[mode];
+      if (savedPositions && Object.keys(savedPositions).length > 0) {
+        const restoredNodes = currentNodes.map((n) => {
+          const pos = savedPositions[n.id];
+          return pos ? { ...n, position: { x: pos.x, y: pos.y } } : { ...n };
+        });
+        setNodes(restoredNodes);
+      } else {
+        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+          currentNodes,
+          edges,
+          mode,
+        );
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
+      }
     },
-    [nodes, edges, setNodes, setEdges],
+    [nodes, edges, layoutMode, setNodes, setEdges, persistLayout],
   );
 
   const handleContextMenuAction = useCallback(
@@ -742,6 +869,13 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
       if (!dialogState.open) return;
 
       const { action, targetId, targetData } = dialogState;
+
+      const validationError = validateRelationship(action, targetId, edges);
+      if (validationError) {
+        alert(validationError);
+        return;
+      }
+
       const fullName = `${data.firstName} ${data.lastName}`;
 
       let newGeneration = targetData.generation;
@@ -753,9 +887,12 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         case 'sibling':
           break;
         case 'child':
+        case 'adopted':
+        case 'step-child':
           newGeneration = targetData.generation + 1;
           break;
         case 'parent':
+        case 'step-parent':
           newGeneration = targetData.generation - 1;
           break;
       }
@@ -827,6 +964,34 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
             }
             break;
           }
+          case 'adopted': {
+            const motherId = findMother(targetId, nodes, edges) ?? targetId;
+            const rel = await relationshipApi.create(treeId, {
+              person_a_id: motherId,
+              person_b_id: createdPerson.id,
+              type: 'adopted',
+            });
+            newEdges.push(relationshipToEdge(rel));
+            break;
+          }
+          case 'step-child': {
+            const rel = await relationshipApi.create(treeId, {
+              person_a_id: targetId,
+              person_b_id: createdPerson.id,
+              type: 'step-child',
+            });
+            newEdges.push(relationshipToEdge(rel));
+            break;
+          }
+          case 'step-parent': {
+            const rel = await relationshipApi.create(treeId, {
+              person_a_id: createdPerson.id,
+              person_b_id: targetId,
+              type: 'step-parent',
+            });
+            newEdges.push(relationshipToEdge(rel));
+            break;
+          }
         }
 
         const personApiData = {
@@ -846,7 +1011,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         const relApiData = newEdges.map((e) => ({
           person_a_id: e.source,
           person_b_id: e.target,
-          type: e.label === 'spouse' ? 'spouse' : 'child',
+          type: (e.label as string) || 'child',
         }));
 
         const entry: HistoryEntry = {
@@ -965,6 +1130,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         onConnect={onConnect}
         onNodeContextMenu={onNodeContextMenu}
         onNodeClick={onNodeClick}
+        onNodeDragStop={onNodeDragStop}
         connectionLineType={ConnectionLineType.SmoothStep}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}

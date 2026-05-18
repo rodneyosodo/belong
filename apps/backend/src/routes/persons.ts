@@ -282,6 +282,83 @@ export const personRoutes = new Elysia({ prefix: '/api/trees' })
       return { error: 'person_a_id, person_b_id, and type are required' };
     }
 
+    const VALID_TYPES = ['parent', 'child', 'spouse', 'sibling', 'adopted', 'step-parent', 'step-child'];
+    if (!VALID_TYPES.includes(body.type)) {
+      context.set.status = 400;
+      return { error: `Invalid relationship type. Must be one of: ${VALID_TYPES.join(', ')}` };
+    }
+
+    if (body.person_a_id === body.person_b_id) {
+      context.set.status = 400;
+      return { error: 'Cannot create a relationship between a person and themselves' };
+    }
+
+    const { rows: existing } = await pool.query(
+      `SELECT id, type FROM relationships WHERE organization_id = $1 AND ((person_a_id = $2 AND person_b_id = $3) OR (person_a_id = $3 AND person_b_id = $2))`,
+      [treeId, body.person_a_id, body.person_b_id],
+    );
+
+    if (existing.length > 0) {
+      const types = existing.map((r: any) => r.type);
+      if (types.includes(body.type)) {
+        context.set.status = 409;
+        return { error: `A '${body.type}' relationship already exists between these persons` };
+      }
+      if (body.type === 'spouse' && types.some((t: string) => t === 'spouse')) {
+        context.set.status = 409;
+        return { error: 'These persons are already spouses' };
+      }
+      if (
+        (body.type === 'parent' || body.type === 'child') &&
+        types.some((t: string) => t === 'parent' || t === 'child' || t === 'adopted' || t === 'step-parent' || t === 'step-child')
+      ) {
+        context.set.status = 409;
+        return { error: 'A parent-child relationship already exists between these persons' };
+      }
+    }
+
+    const { rows: aRels } = await pool.query(
+      `SELECT person_b_id FROM relationships WHERE organization_id = $1 AND person_a_id = $2 AND type = 'parent'`,
+      [treeId, body.person_a_id],
+    );
+    const { rows: bAsParent } = await pool.query(
+      `SELECT person_b_id FROM relationships WHERE organization_id = $1 AND person_a_id = $2 AND type IN ('parent', 'step-parent')`,
+      [treeId, body.person_b_id],
+    );
+    const { rows: bAsChild } = await pool.query(
+      `SELECT person_a_id FROM relationships WHERE organization_id = $1 AND person_b_id = $2 AND type IN ('child', 'adopted', 'step-child')`,
+      [treeId, body.person_b_id],
+    );
+
+    if (body.type === 'spouse') {
+      const descOfA = new Set<string>();
+      const collectDesc = async (pid: string) => {
+        const { rows: children } = await pool.query(
+          `SELECT person_b_id FROM relationships WHERE organization_id = $1 AND person_a_id = $2 AND type IN ('child', 'adopted', 'step-child')`,
+          [treeId, pid],
+        );
+        for (const c of children) {
+          if (!descOfA.has(c.person_b_id)) {
+            descOfA.add(c.person_b_id);
+            await collectDesc(c.person_b_id);
+          }
+        }
+      };
+      await collectDesc(body.person_a_id);
+
+      if (descOfA.has(body.person_b_id)) {
+        context.set.status = 400;
+        return { error: 'Cannot create a spouse relationship with a descendant' };
+      }
+    }
+
+    if (body.type === 'parent') {
+      if (aRels.some((r: any) => r.person_b_id === body.person_b_id)) {
+        context.set.status = 400;
+        return { error: 'Cannot be a parent of oneself' };
+      }
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO relationships (organization_id, person_a_id, person_b_id, type, metadata) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [treeId, body.person_a_id, body.person_b_id, body.type, JSON.stringify(body.metadata ?? {})],
