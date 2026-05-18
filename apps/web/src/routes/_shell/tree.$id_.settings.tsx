@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/componen
 import { Loader2, SaveIcon, UploadIcon, Trash2Icon } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 
 import { MembersPanel } from '@/components/members-panel';
 import { treeApi, uploadCoverImage, type Tree } from '@/lib/api';
@@ -105,9 +106,38 @@ function TreeSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8">
-        <Loader2 className="size-8 animate-spin text-[#7D6B3D]" />
-      </div>
+      <>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-6 p-6">
+          <Skeleton className="h-7 w-36" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 

@@ -27,6 +27,8 @@ import {
   useState,
 } from 'react';
 
+import { Skeleton } from '@workspace/ui/components/skeleton';
+
 import '@xyflow/react/dist/style.css';
 
 import { useNavigate } from '@tanstack/react-router';
@@ -926,7 +928,30 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center text-[#8C8782]">Loading tree...</div>
+      <div className="flex h-full flex-col gap-4 p-6">
+        <div className="flex justify-end gap-2">
+          <Skeleton className="h-8 w-16" />
+          <Skeleton className="h-8 w-16" />
+          <Skeleton className="h-8 w-16" />
+        </div>
+        <div className="flex flex-1 gap-6">
+          <div className="flex flex-1 flex-col gap-4">
+            {[0, 1, 2].map((row) => (
+              <div key={row} className="flex gap-6 justify-center">
+                {[0, 1, 2].map((col) => (
+                  <div key={col} className="flex items-center gap-3 rounded-xl border-2 border-[#D6D0BE] bg-[#F5F2E9] px-4 py-2.5">
+                    <Skeleton className="size-9 rounded-full" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 

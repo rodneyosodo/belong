@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 
 import type { FamilyNodeData } from '@/components/family-tree-node';
 import {
@@ -293,9 +294,44 @@ function PersonPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-[#8C8782]">
-        <Loader2 className="size-8 animate-spin text-[#7D6B3D]" />
-      </div>
+      <>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </header>
+        <div className="flex-1 bg-[#F5F2E9]">
+          <div className="mx-auto max-w-5xl p-6">
+            <Card className="mb-6 border-[#D6D0BE]">
+              <CardContent className="flex items-center gap-5 p-6">
+                <Skeleton className="size-16 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-4 w-64" />
+                </div>
+              </CardContent>
+            </Card>
+            <div className="grid grid-cols-2 gap-6">
+              {[0, 1, 2, 3].map((i) => (
+                <Card key={i} className="border-[#D6D0BE]">
+                  <CardHeader className="pb-2">
+                    <Skeleton className="h-4 w-32" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 

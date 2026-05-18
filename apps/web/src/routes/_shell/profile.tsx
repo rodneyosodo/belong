@@ -20,6 +20,7 @@ import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
 import { SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { ToggleGroup, ToggleGroupItem } from '@workspace/ui/components/toggle-group';
 import {
   Eye,
@@ -163,9 +164,38 @@ function ProfileForm() {
 
   if (isPending) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8">
-        <Loader2 className="size-8 animate-spin text-[#7D6B3D]" />
-      </div>
+      <>
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-6 p-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="size-16 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-56" />
+            </div>
+          </div>
+          <div className="space-y-6">
+            {[0, 1, 2, 3].map((i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-5 w-32" />
+                  <Skeleton className="h-4 w-48" />
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </>
     );
   }
 

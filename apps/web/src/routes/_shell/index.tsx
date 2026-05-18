@@ -16,10 +16,10 @@ import {
   SearchIcon,
   PlusIcon,
   Trash2Icon,
-  Loader2,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 
 import { NewTreeDialog } from '@/components/new-tree-dialog';
 import { treeApi, type Tree } from '@/lib/api';
@@ -140,8 +140,30 @@ function HomePage() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="size-8 animate-spin text-[#7D6B3D]" />
+          <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="rounded-2xl border border-[#D6D0BE] bg-[#E8E4D8] p-5 shadow-sm">
+                  <Skeleton className="mb-2 h-8 w-16" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-5 md:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="overflow-hidden rounded-2xl border border-[#D6D0BE] bg-white shadow-sm">
+                  <Skeleton className="h-28 w-full rounded-none" />
+                  <div className="space-y-3 p-4">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <div className="flex justify-between">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : allTrees.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-4 py-20 text-[#8C8782]">
