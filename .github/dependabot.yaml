@@ -1,0 +1,49 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "./.github/workflows"
+    schedule:
+      interval: "monthly"
+      day: "sunday"
+    groups:
+      gh-dependency:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "./apps/backend"
+      - "./apps/web"
+    schedule:
+      interval: "monthly"
+      day: "sunday"
+    groups:
+      docker-dependency:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "./"
+      - "./apps/backend"
+    schedule:
+      interval: "monthly"
+      day: "sunday"
+    groups:
+      dc-dependency:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "npm"
+    directories:
+      - "./"
+      - "./apps/backend"
+      - "./apps/web"
+      - "./packages/ui"
+    schedule:
+      interval: "monthly"
+      day: "sunday"
+    groups:
+      pnpm-dependency:
+        patterns:
+          - "*"
