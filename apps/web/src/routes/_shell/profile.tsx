@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { Avatar, AvatarFallback, AvatarImage } from '@workspace/ui/components/avatar';
 import {
   Breadcrumb,
@@ -35,7 +36,6 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useNavigate } from '@tanstack/react-router';
 
 import { useTheme } from '@/components/theme-provider';
 import { authClient } from '@/lib/auth-client';

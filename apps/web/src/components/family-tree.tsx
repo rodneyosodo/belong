@@ -1,6 +1,6 @@
 import dagre from '@dagrejs/dagre';
-import { toPng } from 'html-to-image';
-import { jsPDF } from 'jspdf';
+import { useNavigate } from '@tanstack/react-router';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import {
   Background,
   MiniMap,
@@ -20,6 +20,11 @@ import {
   type NodeMouseHandler,
   type NodeDragHandler,
 } from '@xyflow/react';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
+
+import '@xyflow/react/dist/style.css';
+
 import {
   forwardRef,
   useCallback,
@@ -30,11 +35,6 @@ import {
   useState,
 } from 'react';
 
-import { Skeleton } from '@workspace/ui/components/skeleton';
-
-import '@xyflow/react/dist/style.css';
-
-import { useNavigate } from '@tanstack/react-router';
 import { useHistory, type HistoryEntry } from '@/hooks/use-history';
 import { personApi, relationshipApi, layoutApi, type Person, type Relationship } from '@/lib/api';
 
@@ -163,16 +163,86 @@ function personToNode(p: Person): Node<FamilyNodeData> {
   };
 }
 
-const REL_STYLE: Record<string, { stroke: string; strokeWidth: number; dashArray?: string; edgeType: string; sourceHandle: string; targetHandle: string }> = {
-  spouse: { stroke: '#7D6B3D', strokeWidth: 2, edgeType: 'straight', sourceHandle: 'right', targetHandle: 'left' },
-  parent: { stroke: '#5E5954', strokeWidth: 1.5, edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
-  child: { stroke: '#5E5954', strokeWidth: 1.5, edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
-  adopted: { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
-  'adopted-parent': { stroke: '#2563EB', strokeWidth: 1.5, dashArray: '6 3', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
-  'step-parent': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
-  'step-child': { stroke: '#9333EA', strokeWidth: 1.5, dashArray: '4 4', edgeType: 'smoothstep', sourceHandle: 'bottom', targetHandle: 'top' },
-  sibling: { stroke: '#16A34A', strokeWidth: 1.5, dashArray: '8 4', edgeType: 'straight', sourceHandle: 'right', targetHandle: 'left' },
-  'half-sibling': { stroke: '#D97706', strokeWidth: 1.5, dashArray: '2 4', edgeType: 'straight', sourceHandle: 'right', targetHandle: 'left' },
+const REL_STYLE: Record<
+  string,
+  {
+    stroke: string;
+    strokeWidth: number;
+    dashArray?: string;
+    edgeType: string;
+    sourceHandle: string;
+    targetHandle: string;
+  }
+> = {
+  spouse: {
+    stroke: '#7D6B3D',
+    strokeWidth: 2,
+    edgeType: 'straight',
+    sourceHandle: 'right',
+    targetHandle: 'left',
+  },
+  parent: {
+    stroke: '#5E5954',
+    strokeWidth: 1.5,
+    edgeType: 'smoothstep',
+    sourceHandle: 'bottom',
+    targetHandle: 'top',
+  },
+  child: {
+    stroke: '#5E5954',
+    strokeWidth: 1.5,
+    edgeType: 'smoothstep',
+    sourceHandle: 'bottom',
+    targetHandle: 'top',
+  },
+  adopted: {
+    stroke: '#2563EB',
+    strokeWidth: 1.5,
+    dashArray: '6 3',
+    edgeType: 'smoothstep',
+    sourceHandle: 'bottom',
+    targetHandle: 'top',
+  },
+  'adopted-parent': {
+    stroke: '#2563EB',
+    strokeWidth: 1.5,
+    dashArray: '6 3',
+    edgeType: 'smoothstep',
+    sourceHandle: 'bottom',
+    targetHandle: 'top',
+  },
+  'step-parent': {
+    stroke: '#9333EA',
+    strokeWidth: 1.5,
+    dashArray: '4 4',
+    edgeType: 'smoothstep',
+    sourceHandle: 'bottom',
+    targetHandle: 'top',
+  },
+  'step-child': {
+    stroke: '#9333EA',
+    strokeWidth: 1.5,
+    dashArray: '4 4',
+    edgeType: 'smoothstep',
+    sourceHandle: 'bottom',
+    targetHandle: 'top',
+  },
+  sibling: {
+    stroke: '#16A34A',
+    strokeWidth: 1.5,
+    dashArray: '8 4',
+    edgeType: 'straight',
+    sourceHandle: 'right',
+    targetHandle: 'left',
+  },
+  'half-sibling': {
+    stroke: '#D97706',
+    strokeWidth: 1.5,
+    dashArray: '2 4',
+    edgeType: 'straight',
+    sourceHandle: 'right',
+    targetHandle: 'left',
+  },
 };
 
 function relationshipToEdge(r: Relationship): Edge {
@@ -189,7 +259,11 @@ function relationshipToEdge(r: Relationship): Edge {
   };
 }
 
-function computeGeneration(personId: string, edges: Edge[], _nodes: Node<FamilyNodeData>[]): number {
+function computeGeneration(
+  personId: string,
+  edges: Edge[],
+  _nodes: Node<FamilyNodeData>[],
+): number {
   const visited = new Set<string>();
   function depth(id: string): number {
     if (visited.has(id)) return 0;
@@ -232,7 +306,12 @@ function validateRelationship(
     case 'step-parent':
     case 'adopted-parent': {
       const existingParentEdges = edges.filter(
-        (e) => e.target === targetId && e.source !== e.target && e.type === 'smoothstep' && (e.data as any)?.relType !== 'spouse' && (e.data as any)?.relType !== 'sibling',
+        (e) =>
+          e.target === targetId &&
+          e.source !== e.target &&
+          e.type === 'smoothstep' &&
+          (e.data as any)?.relType !== 'spouse' &&
+          (e.data as any)?.relType !== 'sibling',
       );
       if (existingParentEdges.length >= 2) return 'This person already has two parents';
       return null;
@@ -360,7 +439,7 @@ function toGedcom(nodes: Node<FamilyNodeData>[], edges: Edge[]): string {
 
   const spouseEdges = edges.filter((e) => (e.data as any)?.relType === 'spouse');
   for (const edge of spouseEdges) {
-    const key = [edge.source, edge.target].sort().join('-');
+    const key = [edge.source, edge.target].toSorted().join('-');
     if (visited.has(key)) continue;
     visited.add(key);
 
@@ -677,9 +756,12 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
     [setEdges],
   );
 
-  const onNodeClick = useCallback<NodeMouseHandler>((_, node) => {
-    navigate({ to: '/person/$id', params: { id: node.id } });
-  }, [navigate]);
+  const onNodeClick = useCallback<NodeMouseHandler>(
+    (_, node) => {
+      navigate({ to: '/person/$id', params: { id: node.id } });
+    },
+    [navigate],
+  );
 
   const onNodeContextMenu = useCallback<NodeMouseHandler>((event, node) => {
     event.preventDefault();
@@ -1180,9 +1262,12 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         <div className="flex flex-1 gap-6">
           <div className="flex flex-1 flex-col gap-4">
             {[0, 1, 2].map((row) => (
-              <div key={row} className="flex gap-6 justify-center">
+              <div key={row} className="flex justify-center gap-6">
                 {[0, 1, 2].map((col) => (
-                  <div key={col} className="flex items-center gap-3 rounded-xl border-2 border-[#D6D0BE] bg-[#F5F2E9] px-4 py-2.5">
+                  <div
+                    key={col}
+                    className="flex items-center gap-3 rounded-xl border-2 border-[#D6D0BE] bg-[#F5F2E9] px-4 py-2.5"
+                  >
                     <Skeleton className="size-9 rounded-full" />
                     <div className="space-y-1.5">
                       <Skeleton className="h-4 w-24" />

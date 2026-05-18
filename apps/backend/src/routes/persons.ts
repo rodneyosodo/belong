@@ -282,7 +282,17 @@ export const personRoutes = new Elysia({ prefix: '/api/trees' })
       return { error: 'person_a_id, person_b_id, and type are required' };
     }
 
-    const VALID_TYPES = ['parent', 'child', 'spouse', 'sibling', 'adopted', 'adopted-parent', 'step-parent', 'step-child', 'half-sibling'];
+    const VALID_TYPES = [
+      'parent',
+      'child',
+      'spouse',
+      'sibling',
+      'adopted',
+      'adopted-parent',
+      'step-parent',
+      'step-child',
+      'half-sibling',
+    ];
     if (!VALID_TYPES.includes(body.type)) {
       context.set.status = 400;
       return { error: `Invalid relationship type. Must be one of: ${VALID_TYPES.join(', ')}` };
@@ -310,7 +320,14 @@ export const personRoutes = new Elysia({ prefix: '/api/trees' })
       }
       if (
         (body.type === 'parent' || body.type === 'child') &&
-        types.some((t: string) => t === 'parent' || t === 'child' || t === 'adopted' || t === 'step-parent' || t === 'step-child')
+        types.some(
+          (t: string) =>
+            t === 'parent' ||
+            t === 'child' ||
+            t === 'adopted' ||
+            t === 'step-parent' ||
+            t === 'step-child',
+        )
       ) {
         context.set.status = 409;
         return { error: 'A parent-child relationship already exists between these persons' };
@@ -459,8 +476,9 @@ export const personRoutes = new Elysia({ prefix: '/api/trees' })
     }
   });
 
-export const singletonPersonRoutes = new Elysia({ prefix: '/api/persons' })
-  .get('/:personId', async (context) => {
+export const singletonPersonRoutes = new Elysia({ prefix: '/api/persons' }).get(
+  '/:personId',
+  async (context) => {
     const { personId } = context.params as { personId: string };
     const person = await fetchPersonById(pool, personId);
     if (!person) {
@@ -475,7 +493,8 @@ export const singletonPersonRoutes = new Elysia({ prefix: '/api/persons' })
     }
 
     return person;
-  });
+  },
+);
 
 export const eventRoutes = new Elysia({ prefix: '/api/persons' })
   .get('/:personId/events', async (context) => {

@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { uploadPersonPhoto } from '@/lib/api';
+
 import type { PersonFormData } from './add-person-dialog';
 import type { FamilyNodeData } from './family-tree-node';
 

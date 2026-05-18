@@ -16,7 +16,18 @@ import {
 } from '@workspace/ui/components/card';
 import { Separator } from '@workspace/ui/components/separator';
 import { SidebarTrigger } from '@workspace/ui/components/sidebar';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, PlusIcon, UsersIcon, HeartIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  PlusIcon,
+  UsersIcon,
+  HeartIcon,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 
 import { importApi, treeApi, type Tree } from '@/lib/api';
@@ -264,8 +275,8 @@ function parseGedcom(text: string): {
 }
 
 function GenderIcon({ gender }: { gender: string }) {
-  if (gender === 'male') return <span className="text-blue-600 text-xs">&#9794;</span>;
-  if (gender === 'female') return <span className="text-pink-600 text-xs">&#9792;</span>;
+  if (gender === 'male') return <span className="text-xs text-blue-600">&#9794;</span>;
+  if (gender === 'female') return <span className="text-xs text-pink-600">&#9792;</span>;
   return null;
 }
 
@@ -353,7 +364,10 @@ function ImportPage() {
           });
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to parse GEDCOM file. The file may be corrupted or in an unsupported format.');
+        setError(
+          err.message ||
+            'Failed to parse GEDCOM file. The file may be corrupted or in an unsupported format.',
+        );
         parsedRef.current = null;
       }
       setLoading(false);
@@ -471,7 +485,7 @@ function ImportPage() {
                   <FileText className="size-8 text-[#8C8782]" />
                   <div>
                     <p className="text-sm font-medium text-[#2D2926]">
-                      {loading ? 'Reading file...' : fileName ?? 'Click to select a .ged file'}
+                      {loading ? 'Reading file...' : (fileName ?? 'Click to select a .ged file')}
                     </p>
                     <p className="mt-0.5 text-xs text-[#8C8782]">GEDCOM 5.5.1 format supported</p>
                   </div>
@@ -568,7 +582,11 @@ function ImportPage() {
                             <td className="px-4 py-2">
                               <GenderIcon gender={p.gender} />
                               <span className="text-[#5E5954]">
-                                {p.gender === 'male' ? 'Male' : p.gender === 'female' ? 'Female' : '—'}
+                                {p.gender === 'male'
+                                  ? 'Male'
+                                  : p.gender === 'female'
+                                    ? 'Female'
+                                    : '—'}
                               </span>
                             </td>
                             <td className="px-4 py-2 text-[#5E5954]">{p.date_of_birth || '—'}</td>
@@ -605,9 +623,13 @@ function ImportPage() {
                       <thead className="sticky top-0 bg-[#F5F2E9]">
                         <tr>
                           <th className="px-4 py-2 text-left font-medium text-[#5E5954]">#</th>
-                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Person A</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">
+                            Person A
+                          </th>
                           <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Type</th>
-                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">Person B</th>
+                          <th className="px-4 py-2 text-left font-medium text-[#5E5954]">
+                            Person B
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -620,7 +642,7 @@ function ImportPage() {
                               <td className="px-4 py-2 text-[#2D2926]">
                                 {a ? `${a.first_name} ${a.last_name}` : `#${r.person_a_id}`}
                               </td>
-                              <td className="px-4 py-2 capitalize text-[#5E5954]">{r.type}</td>
+                              <td className="px-4 py-2 text-[#5E5954] capitalize">{r.type}</td>
                               <td className="px-4 py-2 text-[#2D2926]">
                                 {b ? `${b.first_name} ${b.last_name}` : `#${r.person_b_id}`}
                               </td>

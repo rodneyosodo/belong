@@ -19,11 +19,11 @@ import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
 import { SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@workspace/ui/components/tabs';
 import { Loader2, SaveIcon, UploadIcon, Trash2Icon } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { Skeleton } from '@workspace/ui/components/skeleton';
 
 import { MembersPanel } from '@/components/members-panel';
 import { treeApi, uploadCoverImage, type Tree } from '@/lib/api';
@@ -293,9 +293,7 @@ function TreeSettingsPage() {
               <Card className="border-red-200">
                 <CardHeader>
                   <CardTitle className="text-red-700">Danger Zone</CardTitle>
-                  <CardDescription>
-                    Permanently delete this tree and all its data.
-                  </CardDescription>
+                  <CardDescription>Permanently delete this tree and all its data.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button variant="destructive" onClick={handleDelete}>

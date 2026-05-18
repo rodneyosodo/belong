@@ -9,6 +9,7 @@ import {
 } from '@workspace/ui/components/breadcrumb';
 import { Separator } from '@workspace/ui/components/separator';
 import { SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import {
   UsersIcon,
   GitBranchIcon,
@@ -19,7 +20,6 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Skeleton } from '@workspace/ui/components/skeleton';
 
 import { NewTreeDialog } from '@/components/new-tree-dialog';
 import { treeApi, type Tree } from '@/lib/api';
@@ -143,7 +143,10 @@ function HomePage() {
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="rounded-2xl border border-[#D6D0BE] bg-[#E8E4D8] p-5 shadow-sm">
+                <div
+                  key={i}
+                  className="rounded-2xl border border-[#D6D0BE] bg-[#E8E4D8] p-5 shadow-sm"
+                >
                   <Skeleton className="mb-2 h-8 w-16" />
                   <Skeleton className="h-4 w-28" />
                 </div>
@@ -151,7 +154,10 @@ function HomePage() {
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="overflow-hidden rounded-2xl border border-[#D6D0BE] bg-white shadow-sm">
+                <div
+                  key={i}
+                  className="overflow-hidden rounded-2xl border border-[#D6D0BE] bg-white shadow-sm"
+                >
                   <Skeleton className="h-28 w-full rounded-none" />
                   <div className="space-y-3 p-4">
                     <Skeleton className="h-5 w-3/4" />

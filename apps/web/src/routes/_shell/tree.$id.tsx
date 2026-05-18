@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -22,7 +23,6 @@ import {
   ChevronDownIcon,
 } from 'lucide-react';
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { Link } from '@tanstack/react-router';
 import { toast } from 'sonner';
 
 import { FamilyTree, type FamilyTreeHandle } from '@/components/family-tree';
@@ -147,7 +147,7 @@ function TreePage() {
               <ChevronDownIcon className="size-3" />
             </button>
             {exportOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 min-w-[180px] rounded-xl border border-[#D6D0BE] bg-[#F5F2E9] py-1 shadow-lg">
+              <div className="absolute top-full right-0 z-50 mt-1 min-w-[180px] rounded-xl border border-[#D6D0BE] bg-[#F5F2E9] py-1 shadow-lg">
                 <button
                   type="button"
                   onClick={handleExportPng}
@@ -192,7 +192,7 @@ function TreePage() {
               <ChevronDownIcon className="size-3" />
             </button>
             {shareOpen && (
-              <div className="absolute right-0 top-full z-50 mt-1 min-w-[200px] rounded-xl border border-[#D6D0BE] bg-[#F5F2E9] py-1 shadow-lg">
+              <div className="absolute top-full right-0 z-50 mt-1 min-w-[200px] rounded-xl border border-[#D6D0BE] bg-[#F5F2E9] py-1 shadow-lg">
                 <button
                   type="button"
                   onClick={handleShareLink}

@@ -10,11 +10,20 @@ import {
 } from '@workspace/ui/components/dialog';
 import { Input } from '@workspace/ui/components/input';
 import { Label } from '@workspace/ui/components/label';
-import { HeartIcon, BabyIcon, ArrowUpIcon, UserPlusIcon, UploadIcon, Loader2, XIcon } from 'lucide-react';
+import {
+  HeartIcon,
+  BabyIcon,
+  ArrowUpIcon,
+  UserPlusIcon,
+  UploadIcon,
+  Loader2,
+  XIcon,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { uploadPersonPhoto } from '@/lib/api';
+
 import type { ContextMenuAction } from './node-context-menu';
 
 export type PersonFormData = {

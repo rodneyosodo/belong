@@ -7,9 +7,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@workspace/ui/components/breadcrumb';
+import { Button } from '@workspace/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui/components/card';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
 import { SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { Skeleton } from '@workspace/ui/components/skeleton';
 import {
   BabyIcon,
   CalendarIcon,
@@ -22,28 +35,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Skeleton } from '@workspace/ui/components/skeleton';
 
 import type { FamilyNodeData } from '@/components/family-tree-node';
-import {
-  personApi,
-  relationshipApi,
-  eventApi,
-  type Person,
-  type PersonEvent,
-} from '@/lib/api';
-import { Button } from '@workspace/ui/components/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
+import { personApi, relationshipApi, eventApi, type Person, type PersonEvent } from '@/lib/api';
 
 export const Route = createFileRoute('/_shell/person/$id')({
   component: PersonPage,
@@ -336,9 +330,7 @@ function PersonPage() {
   }
 
   if (!person) {
-    return (
-      <div className="p-8 text-[#8C8782]">Person not found</div>
-    );
+    return <div className="p-8 text-[#8C8782]">Person not found</div>;
   }
 
   const data: Partial<FamilyNodeData> = {
@@ -445,9 +437,7 @@ function PersonPage() {
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <dt className="text-[#8C8782]">Gender</dt>
-                    <dd className="font-medium text-[#2D2926] capitalize">
-                      {data.gender || '—'}
-                    </dd>
+                    <dd className="font-medium text-[#2D2926] capitalize">{data.gender || '—'}</dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-[#8C8782]">Age</dt>
@@ -526,7 +516,7 @@ function PersonPage() {
                         return (
                           <div key={entry.id} className="relative">
                             <div
-                              className={`absolute -left-6 top-0.5 flex size-4 items-center justify-center rounded-full ${colorClass}`}
+                              className={`absolute top-0.5 -left-6 flex size-4 items-center justify-center rounded-full ${colorClass}`}
                             >
                               <Icon className="size-2.5" />
                             </div>
@@ -535,9 +525,7 @@ function PersonPage() {
                                 <p className="text-xs font-medium text-[#7D6B3D]">
                                   {entry.date || '—'}
                                 </p>
-                                <p className="text-sm font-medium text-[#2D2926]">
-                                  {entry.title}
-                                </p>
+                                <p className="text-sm font-medium text-[#2D2926]">{entry.title}</p>
                                 {entry.description && (
                                   <p className="mt-0.5 text-xs text-[#5E5954]">
                                     {entry.description}
@@ -548,9 +536,7 @@ function PersonPage() {
                                 <div className="flex shrink-0 gap-1">
                                   <button
                                     onClick={() => {
-                                      const ev = events.find(
-                                        (e) => e.id === entry.eventId,
-                                      );
+                                      const ev = events.find((e) => e.id === entry.eventId);
                                       if (ev) openEditDialog(ev);
                                     }}
                                     className="rounded p-1 text-[#8C8782] hover:bg-[#EDEAD8] hover:text-[#2D2926]"
@@ -593,9 +579,7 @@ function PersonPage() {
                 {editingEvent ? 'Edit Event' : 'Add Event'}
               </DialogTitle>
               <DialogDescription className="text-xs text-[#5E5954]">
-                {editingEvent
-                  ? 'Update this life event'
-                  : 'Add a life event to the timeline'}
+                {editingEvent ? 'Update this life event' : 'Add a life event to the timeline'}
               </DialogDescription>
             </div>
           </DialogHeader>
