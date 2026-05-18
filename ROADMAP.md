@@ -81,7 +81,7 @@
 - [x] Life timeline — birth/death events
 - [x] Photo upload — avatar/photo storage for persons (file upload via /api/upload/person-photo)
 - [x] Edit profile form (edit-person-dialog with all fields)
-- [ ] Timeline view — marriage, custom events
+- [x] Timeline view — marriage, custom events (person_events table, timeline with birth/death/marriage/custom)
 
 ## Phase 6: Relationship Types
 

@@ -197,3 +197,43 @@ export async function uploadPersonPhoto(
 
   return res.json();
 }
+
+export interface PersonEvent {
+  id: string;
+  person_id: string;
+  type: string;
+  title: string;
+  date: string;
+  description: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export const eventApi = {
+  list: (personId: string) => request<PersonEvent[]>(`/api/persons/${personId}/events`),
+
+  create: (
+    personId: string,
+    data: { type?: string; title: string; date?: string; description?: string },
+  ) =>
+    request<PersonEvent>(`/api/persons/${personId}/events`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  update: (
+    personId: string,
+    eventId: string,
+    data: Partial<Pick<PersonEvent, 'type' | 'title' | 'date' | 'description'>>,
+  ) =>
+    request<PersonEvent>(`/api/persons/${personId}/events/${eventId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  delete: (personId: string, eventId: string) =>
+    request<{ success: boolean }>(`/api/persons/${personId}/events/${eventId}`, {
+      method: 'DELETE',
+    }),
+};

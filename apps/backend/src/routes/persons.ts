@@ -399,3 +399,184 @@ export const singletonPersonRoutes = new Elysia({ prefix: '/api/persons' })
 
     return person;
   });
+
+export const eventRoutes = new Elysia({ prefix: '/api/persons' })
+  .get('/:personId/events', async (context) => {
+    const { personId } = context.params as { personId: string };
+    const person = await fetchPersonById(pool, personId);
+    if (!person) {
+      context.set.status = 404;
+      return { error: 'Person not found' };
+    }
+
+    const result = await checkAccess(context, person.tree_id, false);
+    if (!result) {
+      context.set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const { rows } = await pool.query(
+      `SELECT id, person_id, type, title, date, description, metadata, created_at, updated_at FROM person_events WHERE person_id = $1 ORDER BY date ASC, created_at ASC`,
+      [personId],
+    );
+
+    return rows.map((r: any) => ({
+      id: r.id,
+      person_id: r.person_id,
+      type: r.type,
+      title: r.title,
+      date: r.date,
+      description: r.description,
+      metadata: r.metadata,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+    }));
+  })
+  .post('/:personId/events', async (context) => {
+    const { personId } = context.params as { personId: string };
+    const person = await fetchPersonById(pool, personId);
+    if (!person) {
+      context.set.status = 404;
+      return { error: 'Person not found' };
+    }
+
+    const result = await checkAccess(context, person.tree_id, true);
+    if (!result) {
+      context.set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const body = context.body as {
+      type?: string;
+      title?: string;
+      date?: string;
+      description?: string;
+      metadata?: any;
+    };
+
+    if (!body.title?.trim()) {
+      context.set.status = 400;
+      return { error: 'Title is required' };
+    }
+
+    const { rows } = await pool.query(
+      `INSERT INTO person_events (organization_id, person_id, type, title, date, description, metadata) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [
+        person.tree_id,
+        personId,
+        body.type || 'custom',
+        body.title.trim(),
+        body.date || '',
+        body.description || '',
+        JSON.stringify(body.metadata ?? {}),
+      ],
+    );
+
+    const r = rows[0];
+    return {
+      id: r.id,
+      person_id: r.person_id,
+      type: r.type,
+      title: r.title,
+      date: r.date,
+      description: r.description,
+      metadata: r.metadata,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+    };
+  })
+  .put('/:personId/events/:eventId', async (context) => {
+    const { personId, eventId } = context.params as { personId: string; eventId: string };
+    const person = await fetchPersonById(pool, personId);
+    if (!person) {
+      context.set.status = 404;
+      return { error: 'Person not found' };
+    }
+
+    const result = await checkAccess(context, person.tree_id, true);
+    if (!result) {
+      context.set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    const body = context.body as {
+      type?: string;
+      title?: string;
+      date?: string;
+      description?: string;
+      metadata?: any;
+    };
+
+    const sets: string[] = [];
+    const values: any[] = [];
+    let idx = 1;
+
+    for (const [key, col] of Object.entries({
+      type: 'type',
+      title: 'title',
+      date: 'date',
+      description: 'description',
+    })) {
+      if ((body as any)[key] !== undefined) {
+        sets.push(`${col} = $${idx++}`);
+        values.push((body as any)[key]);
+      }
+    }
+
+    if (body.metadata !== undefined) {
+      sets.push(`metadata = $${idx++}`);
+      values.push(JSON.stringify(body.metadata));
+    }
+
+    if (sets.length === 0) {
+      context.set.status = 400;
+      return { error: 'No fields to update' };
+    }
+
+    sets.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(eventId, personId);
+
+    const { rows } = await pool.query(
+      `UPDATE person_events SET ${sets.join(', ')} WHERE id = $${idx++} AND person_id = $${idx++} RETURNING *`,
+      values,
+    );
+
+    if (rows.length === 0) {
+      context.set.status = 404;
+      return { error: 'Event not found' };
+    }
+
+    const r = rows[0];
+    return {
+      id: r.id,
+      person_id: r.person_id,
+      type: r.type,
+      title: r.title,
+      date: r.date,
+      description: r.description,
+      metadata: r.metadata,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+    };
+  })
+  .delete('/:personId/events/:eventId', async (context) => {
+    const { personId, eventId } = context.params as { personId: string; eventId: string };
+    const person = await fetchPersonById(pool, personId);
+    if (!person) {
+      context.set.status = 404;
+      return { error: 'Person not found' };
+    }
+
+    const result = await checkAccess(context, person.tree_id, true);
+    if (!result) {
+      context.set.status = 401;
+      return { error: 'Unauthorized' };
+    }
+
+    await pool.query(`DELETE FROM person_events WHERE id = $1 AND person_id = $2`, [
+      eventId,
+      personId,
+    ]);
+
+    return { success: true };
+  });
