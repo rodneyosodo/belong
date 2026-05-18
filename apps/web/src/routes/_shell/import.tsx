@@ -15,14 +15,13 @@ import {
   CardDescription,
 } from '@workspace/ui/components/card';
 import { Separator } from '@workspace/ui/components/separator';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { SidebarTrigger } from '@workspace/ui/components/sidebar';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, PlusIcon } from 'lucide-react';
 import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 
-import { AppSidebar } from '@/components/app-sidebar';
 import { importApi, treeApi, type Tree } from '@/lib/api';
 
-export const Route = createFileRoute('/import')({
+export const Route = createFileRoute('/_shell/import')({
   validateSearch: (search: Record<string, unknown>) => ({
     treeId: (search.treeId as string) || '',
   }),
@@ -337,141 +336,138 @@ function ImportPage() {
   const selectedTree = trees.find((t) => t.id === selectedTreeId);
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink asChild>
-                    <Link to="/">Lineage</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Import GEDCOM</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
-        <div className="flex flex-1 items-center justify-center p-6">
-          <Card className="w-full max-w-lg border-[#D6D0BE] shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-['Playfair_Display'] text-lg font-semibold text-[#2D2926]">
-                <Upload className="size-4 text-[#7D6B3D]" />
-                Import GEDCOM
-              </CardTitle>
-              <CardDescription className="text-xs text-[#5E5954]">
-                Upload a GEDCOM (.ged) file to populate a family tree.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#2D2926]">
-                  Import into
-                </label>
-                {trees.length > 0 ? (
-                  <select
-                    value={selectedTreeId}
-                    onChange={(e) => setSelectedTreeId(e.target.value)}
-                    className="w-full rounded-lg border border-[#D6D0BE] bg-white px-3 py-2 text-sm text-[#2D2926] outline-none focus:border-[#7D6B3D]"
-                  >
-                    {trees.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} ({t.person_count ?? 0} people)
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <button
-                    onClick={handleCreateTree}
-                    disabled={creating}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-4 py-2 text-sm font-medium text-[#2D2926] hover:bg-white disabled:opacity-50"
-                  >
-                    {creating ? (
-                      <>
-                        <Loader2 className="size-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <PlusIcon className="size-4" />
-                        Create New Tree
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
-              {selectedTreeId && (
-                <div
-                  onClick={() => fileRef.current?.click()}
-                  className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#D6D0BE] bg-white p-8 text-center transition-colors hover:border-[#7D6B3D]"
-                >
-                  <FileText className="size-8 text-[#8C8782]" />
-                  <div>
-                    <p className="text-sm font-medium text-[#2D2926]">
-                      {loading ? 'Reading file...' : 'Click to select a .ged file'}
-                    </p>
-                    <p className="mt-0.5 text-xs text-[#8C8782]">GEDCOM 5.5.1 format supported</p>
-                  </div>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept=".ged,.gedcom"
-                    className="hidden"
-                    onChange={handleFile}
-                  />
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-                  <AlertCircle className="mt-0.5 size-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              {result && (
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-                    <CheckCircle className="mt-0.5 size-4 shrink-0" />
-                    <div>
-                      <p className="font-medium">File parsed successfully!</p>
-                      <p className="text-green-600">
-                        {result.person_count} individuals, {result.relationship_count} relationships
-                        found.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleImport}
-                    disabled={uploading}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#7D6B3D] px-4 py-2.5 text-sm font-medium text-[#F5F2E9] hover:bg-[#6A5A32] disabled:opacity-50"
-                  >
-                    {uploading ? (
-                      <>
-                        <Loader2 className="size-4 animate-spin" />
-                        Importing...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="size-4" />
-                        Import to {selectedTree?.name ?? 'Tree'}
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink asChild>
+                  <Link to="/">Lineage</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Import GEDCOM</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </header>
+      <div className="flex flex-1 items-center justify-center p-6">
+        <Card className="w-full max-w-lg border-[#D6D0BE] shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-['Playfair_Display'] text-lg font-semibold text-[#2D2926]">
+              <Upload className="size-4 text-[#7D6B3D]" />
+              Import GEDCOM
+            </CardTitle>
+            <CardDescription className="text-xs text-[#5E5954]">
+              Upload a GEDCOM (.ged) file to populate a family tree.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#2D2926]">
+                Import into
+              </label>
+              {trees.length > 0 ? (
+                <select
+                  value={selectedTreeId}
+                  onChange={(e) => setSelectedTreeId(e.target.value)}
+                  className="w-full rounded-lg border border-[#D6D0BE] bg-white px-3 py-2 text-sm text-[#2D2926] outline-none focus:border-[#7D6B3D]"
+                >
+                  {trees.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.person_count ?? 0} people)
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <button
+                  onClick={handleCreateTree}
+                  disabled={creating}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#D6D0BE] bg-[#F5F2E9] px-4 py-2 text-sm font-medium text-[#2D2926] hover:bg-white disabled:opacity-50"
+                >
+                  {creating ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <PlusIcon className="size-4" />
+                      Create New Tree
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {selectedTreeId && (
+              <div
+                onClick={() => fileRef.current?.click()}
+                className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#D6D0BE] bg-white p-8 text-center transition-colors hover:border-[#7D6B3D]"
+              >
+                <FileText className="size-8 text-[#8C8782]" />
+                <div>
+                  <p className="text-sm font-medium text-[#2D2926]">
+                    {loading ? 'Reading file...' : 'Click to select a .ged file'}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#8C8782]">GEDCOM 5.5.1 format supported</p>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".ged,.gedcom"
+                  className="hidden"
+                  onChange={handleFile}
+                />
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 size-4 shrink-0" />
+                {error}
+              </div>
+            )}
+
+            {result && (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+                  <CheckCircle className="mt-0.5 size-4 shrink-0" />
+                  <div>
+                    <p className="font-medium">File parsed successfully!</p>
+                    <p className="text-green-600">
+                      {result.person_count} individuals, {result.relationship_count} relationships
+                      found.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleImport}
+                  disabled={uploading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#7D6B3D] px-4 py-2.5 text-sm font-medium text-[#F5F2E9] hover:bg-[#6A5A32] disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="size-4" />
+                      Import to {selectedTree?.name ?? 'Tree'}
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

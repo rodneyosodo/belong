@@ -11,15 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as ImportRouteImport } from './routes/import'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as TreeIdRouteImport } from './routes/tree.$id'
-import { Route as PersonIdRouteImport } from './routes/person.$id'
+import { Route as ShellRouteImport } from './routes/_shell'
+import { Route as ShellIndexRouteImport } from './routes/_shell/index'
 import { Route as InvitationIdRouteImport } from './routes/invitation.$id'
-import { Route as TreeIdSettingsRouteImport } from './routes/tree.$id_.settings'
+import { Route as ShellProfileRouteImport } from './routes/_shell/profile'
+import { Route as ShellImportRouteImport } from './routes/_shell/import'
+import { Route as ShellTreeIdRouteImport } from './routes/_shell/tree.$id'
+import { Route as ShellPersonIdRouteImport } from './routes/_shell/person.$id'
+import { Route as ShellTreeIdSettingsRouteImport } from './routes/_shell/tree.$id_.settings'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -31,19 +32,9 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImportRoute = ImportRouteImport.update({
-  id: '/import',
-  path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -51,126 +42,137 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const ShellRoute = ShellRouteImport.update({
+  id: '/_shell',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShellIndexRoute = ShellIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TreeIdRoute = TreeIdRouteImport.update({
-  id: '/tree/$id',
-  path: '/tree/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PersonIdRoute = PersonIdRouteImport.update({
-  id: '/person/$id',
-  path: '/person/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ShellRoute,
 } as any)
 const InvitationIdRoute = InvitationIdRouteImport.update({
   id: '/invitation/$id',
   path: '/invitation/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TreeIdSettingsRoute = TreeIdSettingsRouteImport.update({
+const ShellProfileRoute = ShellProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellImportRoute = ShellImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellTreeIdRoute = ShellTreeIdRouteImport.update({
+  id: '/tree/$id',
+  path: '/tree/$id',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellPersonIdRoute = ShellPersonIdRouteImport.update({
+  id: '/person/$id',
+  path: '/person/$id',
+  getParentRoute: () => ShellRoute,
+} as any)
+const ShellTreeIdSettingsRoute = ShellTreeIdSettingsRouteImport.update({
   id: '/tree/$id_/settings',
   path: '/tree/$id/settings',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ShellRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof ShellIndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/import': typeof ShellImportRoute
+  '/profile': typeof ShellProfileRoute
   '/invitation/$id': typeof InvitationIdRoute
-  '/person/$id': typeof PersonIdRoute
-  '/tree/$id': typeof TreeIdRoute
-  '/tree/$id/settings': typeof TreeIdSettingsRoute
+  '/person/$id': typeof ShellPersonIdRoute
+  '/tree/$id': typeof ShellTreeIdRoute
+  '/tree/$id/settings': typeof ShellTreeIdSettingsRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
-  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/import': typeof ShellImportRoute
+  '/profile': typeof ShellProfileRoute
   '/invitation/$id': typeof InvitationIdRoute
-  '/person/$id': typeof PersonIdRoute
-  '/tree/$id': typeof TreeIdRoute
-  '/tree/$id/settings': typeof TreeIdSettingsRoute
+  '/': typeof ShellIndexRoute
+  '/person/$id': typeof ShellPersonIdRoute
+  '/tree/$id': typeof ShellTreeIdRoute
+  '/tree/$id/settings': typeof ShellTreeIdSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_shell': typeof ShellRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/_shell/import': typeof ShellImportRoute
+  '/_shell/profile': typeof ShellProfileRoute
   '/invitation/$id': typeof InvitationIdRoute
-  '/person/$id': typeof PersonIdRoute
-  '/tree/$id': typeof TreeIdRoute
-  '/tree/$id_/settings': typeof TreeIdSettingsRoute
+  '/_shell/': typeof ShellIndexRoute
+  '/_shell/person/$id': typeof ShellPersonIdRoute
+  '/_shell/tree/$id': typeof ShellTreeIdRoute
+  '/_shell/tree/$id_/settings': typeof ShellTreeIdSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/forgot-password'
-    | '/import'
     | '/login'
-    | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/import'
+    | '/profile'
     | '/invitation/$id'
     | '/person/$id'
     | '/tree/$id'
     | '/tree/$id/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/forgot-password'
-    | '/import'
     | '/login'
-    | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/import'
+    | '/profile'
     | '/invitation/$id'
+    | '/'
     | '/person/$id'
     | '/tree/$id'
     | '/tree/$id/settings'
   id:
     | '__root__'
-    | '/'
+    | '/_shell'
     | '/forgot-password'
-    | '/import'
     | '/login'
-    | '/profile'
     | '/reset-password'
     | '/signup'
+    | '/_shell/import'
+    | '/_shell/profile'
     | '/invitation/$id'
-    | '/person/$id'
-    | '/tree/$id'
-    | '/tree/$id_/settings'
+    | '/_shell/'
+    | '/_shell/person/$id'
+    | '/_shell/tree/$id'
+    | '/_shell/tree/$id_/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  ShellRoute: typeof ShellRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
-  ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRoute
-  ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   InvitationIdRoute: typeof InvitationIdRoute
-  PersonIdRoute: typeof PersonIdRoute
-  TreeIdRoute: typeof TreeIdRoute
-  TreeIdSettingsRoute: typeof TreeIdSettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -189,25 +191,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/import': {
-      id: '/import'
-      path: '/import'
-      fullPath: '/import'
-      preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -217,26 +205,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_shell': {
+      id: '/_shell'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ShellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_shell/': {
+      id: '/_shell/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tree/$id': {
-      id: '/tree/$id'
-      path: '/tree/$id'
-      fullPath: '/tree/$id'
-      preLoaderRoute: typeof TreeIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/person/$id': {
-      id: '/person/$id'
-      path: '/person/$id'
-      fullPath: '/person/$id'
-      preLoaderRoute: typeof PersonIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ShellIndexRouteImport
+      parentRoute: typeof ShellRoute
     }
     '/invitation/$id': {
       id: '/invitation/$id'
@@ -245,28 +226,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvitationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tree/$id_/settings': {
-      id: '/tree/$id_/settings'
+    '/_shell/profile': {
+      id: '/_shell/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ShellProfileRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/import': {
+      id: '/_shell/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ShellImportRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/tree/$id': {
+      id: '/_shell/tree/$id'
+      path: '/tree/$id'
+      fullPath: '/tree/$id'
+      preLoaderRoute: typeof ShellTreeIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/person/$id': {
+      id: '/_shell/person/$id'
+      path: '/person/$id'
+      fullPath: '/person/$id'
+      preLoaderRoute: typeof ShellPersonIdRouteImport
+      parentRoute: typeof ShellRoute
+    }
+    '/_shell/tree/$id_/settings': {
+      id: '/_shell/tree/$id_/settings'
       path: '/tree/$id/settings'
       fullPath: '/tree/$id/settings'
-      preLoaderRoute: typeof TreeIdSettingsRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ShellTreeIdSettingsRouteImport
+      parentRoute: typeof ShellRoute
     }
   }
 }
 
+interface ShellRouteChildren {
+  ShellImportRoute: typeof ShellImportRoute
+  ShellProfileRoute: typeof ShellProfileRoute
+  ShellIndexRoute: typeof ShellIndexRoute
+  ShellPersonIdRoute: typeof ShellPersonIdRoute
+  ShellTreeIdRoute: typeof ShellTreeIdRoute
+  ShellTreeIdSettingsRoute: typeof ShellTreeIdSettingsRoute
+}
+
+const ShellRouteChildren: ShellRouteChildren = {
+  ShellImportRoute: ShellImportRoute,
+  ShellProfileRoute: ShellProfileRoute,
+  ShellIndexRoute: ShellIndexRoute,
+  ShellPersonIdRoute: ShellPersonIdRoute,
+  ShellTreeIdRoute: ShellTreeIdRoute,
+  ShellTreeIdSettingsRoute: ShellTreeIdSettingsRoute,
+}
+
+const ShellRouteWithChildren = ShellRoute._addFileChildren(ShellRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  ShellRoute: ShellRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
-  ImportRoute: ImportRoute,
   LoginRoute: LoginRoute,
-  ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   InvitationIdRoute: InvitationIdRoute,
-  PersonIdRoute: PersonIdRoute,
-  TreeIdRoute: TreeIdRoute,
-  TreeIdSettingsRoute: TreeIdSettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

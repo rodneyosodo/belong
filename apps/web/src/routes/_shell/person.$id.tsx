@@ -7,21 +7,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@workspace/ui/components/breadcrumb';
-import { Button } from '@workspace/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui/components/card';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@workspace/ui/components/dialog';
-import { Input } from '@workspace/ui/components/input';
-import { Label } from '@workspace/ui/components/label';
 import { Separator } from '@workspace/ui/components/separator';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@workspace/ui/components/sidebar';
+import { SidebarTrigger } from '@workspace/ui/components/sidebar';
 import {
   BabyIcon,
   CalendarIcon,
@@ -35,7 +23,6 @@ import {
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
-import { AppSidebar } from '@/components/app-sidebar';
 import type { FamilyNodeData } from '@/components/family-tree-node';
 import {
   personApi,
@@ -44,8 +31,20 @@ import {
   type Person,
   type PersonEvent,
 } from '@/lib/api';
+import { Button } from '@workspace/ui/components/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@workspace/ui/components/dialog';
+import { Input } from '@workspace/ui/components/input';
+import { Label } from '@workspace/ui/components/label';
 
-export const Route = createFileRoute('/person/$id')({
+export const Route = createFileRoute('/_shell/person/$id')({
   component: PersonPage,
 });
 
@@ -294,25 +293,15 @@ function PersonPage() {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="flex h-screen items-center justify-center text-[#8C8782]">
-            <Loader2 className="size-8 animate-spin text-[#7D6B3D]" />
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="flex flex-1 items-center justify-center text-[#8C8782]">
+        <Loader2 className="size-8 animate-spin text-[#7D6B3D]" />
+      </div>
     );
   }
 
   if (!person) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="p-8 text-[#8C8782]">Person not found</div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="p-8 text-[#8C8782]">Person not found</div>
     );
   }
 
@@ -336,229 +325,226 @@ function PersonPage() {
     .slice(0, 2);
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">Lineage</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <Link
-                    to="/tree/$id"
-                    params={{ id: person.tree_id }}
-                    className="hover:text-[#2D2926]"
-                  >
-                    Tree
-                  </Link>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{data.label}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
-        <div className="flex-1 bg-[#F5F2E9]">
-          <div className="mx-auto max-w-5xl p-6">
-            <Card className="mb-6 border-[#D6D0BE] shadow-sm">
-              <CardContent className="flex items-center gap-5 p-6">
-                {data.photo ? (
-                  <img
-                    src={data.photo}
-                    alt=""
-                    className="size-16 rounded-full border border-[#D6D0BE] object-cover"
-                  />
-                ) : (
-                  <div className="flex size-16 items-center justify-center rounded-full bg-[#7D6B3D] text-lg font-bold text-white">
-                    {initials}
-                  </div>
-                )}
-                <div>
-                  <h1 className="font-['Playfair_Display'] text-2xl font-semibold text-[#2D2926]">
-                    {data.label}
-                  </h1>
-                  <div className="mt-1 flex items-center gap-3 text-sm text-[#5E5954]">
-                    <span>
-                      {data.dateOfBirth || '?'} — {data.dateOfDeath || 'Present'}
-                    </span>
-                    <span className="text-[#D6D0BE]">|</span>
-                    <span className="capitalize">{data.gender || '—'}</span>
-                    <span className="text-[#D6D0BE]">|</span>
-                    <span>Age: {age}</span>
-                  </div>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink href="/">Lineage</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <Link
+                  to="/tree/$id"
+                  params={{ id: person.tree_id }}
+                  className="hover:text-[#2D2926]"
+                >
+                  Tree
+                </Link>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{data.label}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
+      <div className="flex-1 bg-[#F5F2E9]">
+        <div className="mx-auto max-w-5xl p-6">
+          <Card className="mb-6 border-[#D6D0BE] shadow-sm">
+            <CardContent className="flex items-center gap-5 p-6">
+              {data.photo ? (
+                <img
+                  src={data.photo}
+                  alt=""
+                  className="size-16 rounded-full border border-[#D6D0BE] object-cover"
+                />
+              ) : (
+                <div className="flex size-16 items-center justify-center rounded-full bg-[#7D6B3D] text-lg font-bold text-white">
+                  {initials}
                 </div>
+              )}
+              <div>
+                <h1 className="font-['Playfair_Display'] text-2xl font-semibold text-[#2D2926]">
+                  {data.label}
+                </h1>
+                <div className="mt-1 flex items-center gap-3 text-sm text-[#5E5954]">
+                  <span>
+                    {data.dateOfBirth || '?'} — {data.dateOfDeath || 'Present'}
+                  </span>
+                  <span className="text-[#D6D0BE]">|</span>
+                  <span className="capitalize">{data.gender || '—'}</span>
+                  <span className="text-[#D6D0BE]">|</span>
+                  <span>Age: {age}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-6">
+            <Card className="border-[#D6D0BE] shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
+                  Biography
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-relaxed text-[#5E5954]">
+                  {data.notes || 'No biography available.'}
+                </p>
               </CardContent>
             </Card>
 
-            <div className="grid grid-cols-2 gap-6">
-              <Card className="border-[#D6D0BE] shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
-                    Biography
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed text-[#5E5954]">
-                    {data.notes || 'No biography available.'}
-                  </p>
-                </CardContent>
-              </Card>
+            <Card className="border-[#D6D0BE] shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
+                  Personal Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-[#8C8782]">Gender</dt>
+                    <dd className="font-medium text-[#2D2926] capitalize">
+                      {data.gender || '—'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-[#8C8782]">Age</dt>
+                    <dd className="font-medium text-[#2D2926]">{age}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-[#8C8782]">Birth</dt>
+                    <dd className="font-medium text-[#2D2926]">{data.dateOfBirth || '—'}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-[#8C8782]">Death</dt>
+                    <dd className="font-medium text-[#2D2926]">{data.dateOfDeath || '—'}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-[#8C8782]">Birth Place</dt>
+                    <dd className="font-medium text-[#2D2926]">—</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-[#8C8782]">Occupation</dt>
+                    <dd className="font-medium text-[#2D2926]">—</dd>
+                  </div>
+                </dl>
+              </CardContent>
+            </Card>
 
-              <Card className="border-[#D6D0BE] shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
-                    Personal Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <dl className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <dt className="text-[#8C8782]">Gender</dt>
-                      <dd className="font-medium text-[#2D2926] capitalize">
-                        {data.gender || '—'}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-[#8C8782]">Age</dt>
-                      <dd className="font-medium text-[#2D2926]">{age}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-[#8C8782]">Birth</dt>
-                      <dd className="font-medium text-[#2D2926]">{data.dateOfBirth || '—'}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-[#8C8782]">Death</dt>
-                      <dd className="font-medium text-[#2D2926]">{data.dateOfDeath || '—'}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-[#8C8782]">Birth Place</dt>
-                      <dd className="font-medium text-[#2D2926]">—</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-[#8C8782]">Occupation</dt>
-                      <dd className="font-medium text-[#2D2926]">—</dd>
-                    </div>
-                  </dl>
-                </CardContent>
-              </Card>
+            <Card className="border-[#D6D0BE] shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
+                  Family Relations
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {relations.length === 0 ? (
+                  <p className="text-sm text-[#8C8782]">No relations found.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {relations.slice(0, 6).map((r, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm">
+                        <span className="rounded bg-[#EDEAD8] px-1.5 py-0.5 text-[10px] font-medium text-[#7D6B3D] uppercase">
+                          {r.rel}
+                        </span>
+                        <span className="text-[#2D2926]">{r.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
 
-              <Card className="border-[#D6D0BE] shadow-sm">
-                <CardHeader className="pb-2">
-                  <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
-                    Family Relations
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {relations.length === 0 ? (
-                    <p className="text-sm text-[#8C8782]">No relations found.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {relations.slice(0, 6).map((r, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm">
-                          <span className="rounded bg-[#EDEAD8] px-1.5 py-0.5 text-[10px] font-medium text-[#7D6B3D] uppercase">
-                            {r.rel}
-                          </span>
-                          <span className="text-[#2D2926]">{r.name}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </CardContent>
-              </Card>
+            <Card className="border-[#D6D0BE] shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
+                  Life Timeline
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={openAddDialog}
+                  className="h-7 gap-1 px-2 text-xs text-[#7D6B3D] hover:text-[#6A5A32]"
+                >
+                  <PlusIcon className="size-3" />
+                  Add Event
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {timelineEntries.length === 0 ? (
+                  <p className="text-sm text-[#8C8782]">No timeline events.</p>
+                ) : (
+                  <div className="relative pl-6">
+                    <div className="absolute top-1 bottom-1 left-[7px] w-0.5 bg-[#D6D0BE]" />
+                    <div className="space-y-4">
+                      {timelineEntries.map((entry) => {
+                        const Icon = eventTypeIcons[entry.type] || CalendarIcon;
+                        const colorClass = eventTypeColors[entry.type] || eventTypeColors.custom;
 
-              <Card className="border-[#D6D0BE] shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="font-['Playfair_Display'] text-base font-semibold text-[#2D2926]">
-                    Life Timeline
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={openAddDialog}
-                    className="h-7 gap-1 px-2 text-xs text-[#7D6B3D] hover:text-[#6A5A32]"
-                  >
-                    <PlusIcon className="size-3" />
-                    Add Event
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  {timelineEntries.length === 0 ? (
-                    <p className="text-sm text-[#8C8782]">No timeline events.</p>
-                  ) : (
-                    <div className="relative pl-6">
-                      <div className="absolute top-1 bottom-1 left-[7px] w-0.5 bg-[#D6D0BE]" />
-                      <div className="space-y-4">
-                        {timelineEntries.map((entry) => {
-                          const Icon = eventTypeIcons[entry.type] || CalendarIcon;
-                          const colorClass = eventTypeColors[entry.type] || eventTypeColors.custom;
-
-                          return (
-                            <div key={entry.id} className="relative">
-                              <div
-                                className={`absolute -left-6 top-0.5 flex size-4 items-center justify-center rounded-full ${colorClass}`}
-                              >
-                                <Icon className="size-2.5" />
-                              </div>
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-medium text-[#7D6B3D]">
-                                    {entry.date || '—'}
+                        return (
+                          <div key={entry.id} className="relative">
+                            <div
+                              className={`absolute -left-6 top-0.5 flex size-4 items-center justify-center rounded-full ${colorClass}`}
+                            >
+                              <Icon className="size-2.5" />
+                            </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium text-[#7D6B3D]">
+                                  {entry.date || '—'}
+                                </p>
+                                <p className="text-sm font-medium text-[#2D2926]">
+                                  {entry.title}
+                                </p>
+                                {entry.description && (
+                                  <p className="mt-0.5 text-xs text-[#5E5954]">
+                                    {entry.description}
                                   </p>
-                                  <p className="text-sm font-medium text-[#2D2926]">
-                                    {entry.title}
-                                  </p>
-                                  {entry.description && (
-                                    <p className="mt-0.5 text-xs text-[#5E5954]">
-                                      {entry.description}
-                                    </p>
-                                  )}
-                                </div>
-                                {entry.eventId && (
-                                  <div className="flex shrink-0 gap-1">
-                                    <button
-                                      onClick={() => {
-                                        const ev = events.find(
-                                          (e) => e.id === entry.eventId,
-                                        );
-                                        if (ev) openEditDialog(ev);
-                                      }}
-                                      className="rounded p-1 text-[#8C8782] hover:bg-[#EDEAD8] hover:text-[#2D2926]"
-                                    >
-                                      <PencilIcon className="size-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setDeletingEventId(entry.eventId!);
-                                        setDeletingEventTitle(entry.title);
-                                        setDeleteOpen(true);
-                                      }}
-                                      className="rounded p-1 text-[#8C8782] hover:bg-red-50 hover:text-red-600"
-                                    >
-                                      <Trash2Icon className="size-3" />
-                                    </button>
-                                  </div>
                                 )}
                               </div>
+                              {entry.eventId && (
+                                <div className="flex shrink-0 gap-1">
+                                  <button
+                                    onClick={() => {
+                                      const ev = events.find(
+                                        (e) => e.id === entry.eventId,
+                                      );
+                                      if (ev) openEditDialog(ev);
+                                    }}
+                                    className="rounded p-1 text-[#8C8782] hover:bg-[#EDEAD8] hover:text-[#2D2926]"
+                                  >
+                                    <PencilIcon className="size-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setDeletingEventId(entry.eventId!);
+                                      setDeletingEventTitle(entry.title);
+                                      setDeleteOpen(true);
+                                    }}
+                                    className="rounded p-1 text-[#8C8782] hover:bg-red-50 hover:text-red-600"
+                                  >
+                                    <Trash2Icon className="size-3" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </SidebarInset>
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto rounded-2xl border-[#D6D0BE] bg-[#EDEAD8] p-0 sm:max-w-md">
@@ -580,9 +566,7 @@ function PersonPage() {
 
           <div className="flex flex-col gap-4 px-5 pb-2">
             <div className="flex flex-col gap-1.5">
-              <Label className="text-[13px] font-medium text-[#2D2926]">
-                Event Type
-              </Label>
+              <Label className="text-[13px] font-medium text-[#2D2926]">Event Type</Label>
               <select
                 value={eventType}
                 onChange={(e) => setEventType(e.target.value)}
@@ -696,6 +680,6 @@ function PersonPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </SidebarProvider>
+    </>
   );
 }
