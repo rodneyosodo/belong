@@ -37,7 +37,7 @@ import {
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@workspace/ui/components/theme-provider';
 import { authClient } from '@/lib/auth-client';
 import { env } from '@/lib/env';
 

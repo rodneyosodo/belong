@@ -5,7 +5,7 @@ import { StrictMode } from 'react';
 import '@workspace/ui/globals.css';
 import ReactDOM from 'react-dom/client';
 
-import { ThemeProvider } from '@/components/theme-provider.tsx';
+import { ThemeProvider } from '@workspace/ui/components/theme-provider';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
