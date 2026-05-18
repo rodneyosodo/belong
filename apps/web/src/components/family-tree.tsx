@@ -1,4 +1,6 @@
 import dagre from '@dagrejs/dagre';
+import { toPng } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 import {
   Background,
   MiniMap,
@@ -65,7 +67,7 @@ function getLayoutedElements(
 
   const isHorizontal = direction === 'LR';
 
-  const spouseEdges = edges.filter((e) => e.label === 'spouse');
+  const spouseEdges = edges.filter((e) => (e.data as any)?.relType === 'spouse');
 
   dagreGraph.setGraph({ rankdir: direction });
 
@@ -94,12 +96,12 @@ function getLayoutedElements(
 
   const newEdges = edges.map((edge) => {
     if (isHorizontal) {
-      if (edge.label === 'spouse') {
+      if ((edge.data as any)?.relType === 'spouse') {
         return { ...edge, sourceHandle: 'bottom', targetHandle: 'top' };
       }
       return { ...edge, sourceHandle: 'right', targetHandle: 'left' };
     }
-    if (edge.label === 'spouse') {
+    if ((edge.data as any)?.relType === 'spouse') {
       return { ...edge, sourceHandle: 'right', targetHandle: 'left' };
     }
     return { ...edge, sourceHandle: 'bottom', targetHandle: 'top' };
@@ -183,7 +185,7 @@ function relationshipToEdge(r: Relationship): Edge {
     targetHandle: s.targetHandle,
     type: s.edgeType,
     style: { stroke: s.stroke, strokeWidth: s.strokeWidth },
-    label: r.type,
+    data: { relType: r.type },
   };
 }
 
@@ -207,7 +209,7 @@ function findParents(nodeId: string, allEdges: Edge[]): string[] {
 
 function findSpouse(nodeId: string, allEdges: Edge[]): string | null {
   const spouseEdge = allEdges.find(
-    (e) => e.label === 'spouse' && (e.source === nodeId || e.target === nodeId),
+    (e) => (e.data as any)?.relType === 'spouse' && (e.source === nodeId || e.target === nodeId),
   );
   if (!spouseEdge) return null;
   return spouseEdge.source === nodeId ? spouseEdge.target : spouseEdge.source;
@@ -230,7 +232,7 @@ function validateRelationship(
     case 'step-parent':
     case 'adopted-parent': {
       const existingParentEdges = edges.filter(
-        (e) => e.target === targetId && e.source !== e.target && e.type === 'smoothstep' && e.label !== 'spouse' && e.label !== 'sibling',
+        (e) => e.target === targetId && e.source !== e.target && e.type === 'smoothstep' && (e.data as any)?.relType !== 'spouse' && (e.data as any)?.relType !== 'sibling',
       );
       if (existingParentEdges.length >= 2) return 'This person already has two parents';
       return null;
@@ -356,7 +358,7 @@ function toGedcom(nodes: Node<FamilyNodeData>[], edges: Edge[]): string {
   let familyCount = 0;
   const visited = new Set<string>();
 
-  const spouseEdges = edges.filter((e) => e.label === 'spouse');
+  const spouseEdges = edges.filter((e) => (e.data as any)?.relType === 'spouse');
   for (const edge of spouseEdges) {
     const key = [edge.source, edge.target].sort().join('-');
     if (visited.has(key)) continue;
@@ -407,7 +409,14 @@ function toGedcom(nodes: Node<FamilyNodeData>[], edges: Edge[]): string {
   return lines.join('\n');
 }
 
-export type FamilyTreeHandle = { addMember: () => void; exportTree: () => void };
+export type FamilyTreeHandle = {
+  addMember: () => void;
+  exportTree: () => void;
+  exportPng: () => void;
+  exportPdf: () => void;
+  shareLink: () => Promise<string | null>;
+  embedCode: () => string;
+};
 type FamilyTreeProps = { treeId: string };
 
 export const FamilyTree = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function FamilyTree(
@@ -571,6 +580,37 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
       a.download = 'family-tree.ged';
       a.click();
       URL.revokeObjectURL(url);
+    },
+    exportPng: async () => {
+      const el = document.querySelector('.react-flow__viewport') as HTMLElement;
+      if (!el) return;
+      const dataUrl = await toPng(el, { backgroundColor: '#F5F2E9', quality: 1 });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'family-tree.png';
+      a.click();
+    },
+    exportPdf: async () => {
+      const el = document.querySelector('.react-flow__viewport') as HTMLElement;
+      if (!el) return;
+      const dataUrl = await toPng(el, { backgroundColor: '#F5F2E9', quality: 1 });
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+      });
+      const orientation = img.width > img.height ? 'landscape' : 'portrait';
+      const pdf = new jsPDF({ orientation, unit: 'px', format: [img.width, img.height] });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, img.width, img.height);
+      pdf.save('family-tree.pdf');
+    },
+    shareLink: async () => {
+      const url = `${window.location.origin}/tree/${treeId}`;
+      await navigator.clipboard.writeText(url);
+      return url;
+    },
+    embedCode: () => {
+      return `<iframe src="${window.location.origin}/tree/${treeId}" width="800" height="600" frameborder="0" style="border:1px solid #D6D0BE; border-radius:8px;" title="Family Tree"></iframe>`;
     },
   }));
 
@@ -1049,7 +1089,7 @@ const FamilyTreeInner = forwardRef<FamilyTreeHandle, FamilyTreeProps>(function F
         const relApiData = newEdges.map((e) => ({
           person_a_id: e.source,
           person_b_id: e.target,
-          type: (e.label as string) || 'child',
+          type: ((e.data as any)?.relType as string) || 'child',
         }));
 
         const entry: HistoryEntry = {

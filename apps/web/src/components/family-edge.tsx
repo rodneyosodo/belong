@@ -17,7 +17,7 @@ const REL_STYLES: Record<string, { stroke: string; strokeWidth: number; dashArra
 
 function findSpouse(nodeId: string, allEdges: Edge[]): string | null {
   const edge = allEdges.find(
-    (e) => e.label === 'spouse' && (e.source === nodeId || e.target === nodeId),
+    (e) => (e.data as any)?.relType === 'spouse' && (e.source === nodeId || e.target === nodeId),
   );
   if (!edge) return null;
   return edge.source === nodeId ? edge.target : edge.source;
@@ -34,13 +34,15 @@ export function FamilyEdge({
   sourceY,
   targetX,
   targetY,
-  label,
+  data,
 }: EdgeProps) {
   const nodes = useNodes();
   const edges = useEdges();
 
+  const relType = (data as any)?.relType || 'child';
+
   const path = useMemo(() => {
-    if (label === 'spouse') {
+    if (relType === 'spouse') {
       return `M ${sourceX} ${sourceY} L ${targetX} ${targetY}`;
     }
 
@@ -54,9 +56,8 @@ export function FamilyEdge({
     const midX = (nodeCenterX(sourceNode) + nodeCenterX(spouseNode)) / 2;
 
     return `M ${sourceX} ${sourceY} L ${midX} ${sourceY} L ${midX} ${targetY} L ${targetX} ${targetY}`;
-  }, [source, target, sourceX, sourceY, targetX, targetY, label, nodes, edges]);
+  }, [source, target, sourceX, sourceY, targetX, targetY, relType, nodes, edges]);
 
-  const relType = (label as string) || 'child';
   const style = REL_STYLES[relType] || REL_STYLES.child;
 
   return (

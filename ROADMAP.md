@@ -122,10 +122,10 @@
 
 ## Phase 9: Export & Sharing
 
-- [ ] Export as PNG/SVG — screenshot the tree canvas as an image
-- [ ] Export as PDF — print-ready family tree document
-- [ ] Share via link — generate public/protected link
-- [ ] Embed code — iframe embed for external sites
+- [x] Export as PNG/SVG — screenshot the tree canvas as an image
+- [x] Export as PDF — print-ready family tree document
+- [x] Share via link — generate public/protected link
+- [x] Embed code — iframe embed for external sites
 
 ## Phase 10: Polish & Optimization
 
