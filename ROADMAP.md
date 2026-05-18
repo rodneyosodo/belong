@@ -2,17 +2,17 @@
 
 ## Tech Stack
 
-| Layer              | Technology                                      |
-| ------------------ | ----------------------------------------------- |
-| Monorepo           | Turborepo + bun                                 |
-| Frontend           | Vite + React 19 + TanStack Router + Tailwind v4 |
-| UI                 | shadcn/ui (base-nova), Base UI, Lucide          |
-| Tree Visualization | React Flow (xyflow) + Dagre                     |
-| Backend            | Elysia.js (Bun HTTP framework)                  |
+| Layer              | Technology                                                              |
+| ------------------ | ----------------------------------------------------------------------- |
+| Monorepo           | Turborepo + bun                                                         |
+| Frontend           | Vite + React 19 + TanStack Router + Tailwind v4                         |
+| UI                 | shadcn/ui (base-nova), Base UI, Lucide                                  |
+| Tree Visualization | React Flow (xyflow) + Dagre                                             |
+| Backend            | Elysia.js (Bun HTTP framework)                                          |
 | Auth               | Better Auth (email/password, Google/GitHub OAuth, organizations plugin) |
-| Database           | PostgreSQL via `pg` (node-postgres)             |
-| Email              | Nodemailer (SMTP — password reset, invitations) |
-| Deployment         | Docker (self-hosted)                            |
+| Database           | PostgreSQL via `pg` (node-postgres)                                     |
+| Email              | Nodemailer (SMTP — password reset, invitations)                         |
+| Deployment         | Docker (self-hosted)                                                    |
 
 ## Phase 1: Project Setup & Foundation
 
@@ -145,87 +145,3 @@
 - [x] docker-compose.yml — backend + web + PostgreSQL
 - [x] Environment variables — documented `example.env` with all config vars
 - [x] README — setup instructions for Docker deployment
-
-## Project Structure
-
-```
-belong/
-├── apps/
-│   ├── web/                        # Vite + React + TanStack Router
-│   │   ├── src/
-│   │   │   ├── components/         # App components
-│   │   │   │   ├── add-person-dialog.tsx
-│   │   │   │   ├── app-sidebar.tsx
-│   │   │   │   ├── delete-confirm-dialog.tsx
-│   │   │   │   ├── edit-person-dialog.tsx
-│   │   │   │   ├── family-edge.tsx
-│   │   │   │   ├── family-tree-node.tsx
-│   │   │   │   ├── family-tree.tsx  # Main tree editor with React Flow
-│   │   │   │   ├── forgot-password-form.tsx
-│   │   │   │   ├── login-form.tsx
-│   │   │   │   ├── members-panel.tsx # Org member management
-│   │   │   │   ├── nav-main.tsx
-│   │   │   │   ├── nav-projects.tsx
-│   │   │   │   ├── nav-user.tsx
-│   │   │   │   ├── new-tree-dialog.tsx
-│   │   │   │   ├── node-context-menu.tsx
-│   │   │   │   ├── profile-form.tsx
-│   │   │   │   ├── reset-password-form.tsx
-│   │   │   │   ├── signup-form.tsx
-│   │   │   │   ├── team-switcher.tsx
-│   │   │   │   └── theme-provider.tsx
-│   │   │   ├── hooks/
-│   │   │   │   ├── use-history.ts   # Undo/redo history
-│   │   │   │   └── use-mobile.ts
-│   │   │   ├── lib/
-│   │   │   │   ├── api.ts           # API client (tree, person, relationship, import)
-│   │   │   │   ├── auth-client.ts   # Better Auth client
-│   │   │   │   ├── auth-utils.ts    # Auth guard, session helpers
-│   │   │   │   └── env.ts           # Runtime environment config
-│   │   │   ├── routes/              # TanStack Router file-based routes
-│   │   │   │   ├── __root.tsx       # Root layout with auth guard
-│   │   │   │   ├── index.tsx        # Dashboard
-│   │   │   │   ├── login.tsx
-│   │   │   │   ├── signup.tsx
-│   │   │   │   ├── forgot-password.tsx
-│   │   │   │   ├── reset-password.tsx
-│   │   │   │   ├── profile.tsx      # User profile page
-│   │   │   │   ├── tree.$id.tsx     # Tree editor
-│   │   │   │   ├── tree.$id_.settings.tsx  # Tree settings
-│   │   │   │   ├── person.$id.tsx   # Person detail page
-│   │   │   │   ├── import.tsx       # GEDCOM import
-│   │   │   │   └── invitation.$id.tsx  # Invitation accept/decline
-│   │   │   └── main.tsx
-│   │   ├── index.html
-│   │   └── vite.config.ts
-│   └── backend/                    # Elysia.js + Better Auth
-│       ├── src/
-│       │   ├── index.ts            # Elysia server (migrations, routes, upload endpoints)
-│       │   ├── bin/
-│       │   │   └── migrate.ts      # Standalone migration CLI
-│       │   ├── lib/
-│       │   │   ├── auth.ts         # Better Auth config (org plugin, SMTP, SSO)
-│       │   │   ├── db.ts           # Shared PostgreSQL pool
-│       │   │   └── migrate.ts      # Migration runner
-│       │   └── routes/
-│       │       ├── trees.ts        # Tree CRUD (GET/POST/PUT/DELETE /api/trees)
-│       │       └── persons.ts      # Person/relationship CRUD, GEDCOM import
-│       ├── migrations/
-│       │   └── 0002_domain_tables.sql  # persons + relationships tables
-│       ├── better-auth_migrations/ # Auth table migrations (auto-managed)
-│       └── compose-dev.yaml        # PostgreSQL dev container
-├── packages/
-│   └── ui/                         # Shared shadcn/ui components
-│       ├── src/
-│       │   ├── components/         # Button, Card, Dialog, Input, Tabs, etc.
-│       │   ├── hooks/
-│       │   ├── lib/
-│       │   └── styles/
-│       │       └── globals.css     # Tailwind v4 global styles + CSS vars
-│       └── components.json
-├── docker-compose.yml              # Full-stack orchestration
-├── example.env                     # Environment variable reference
-├── package.json                    # Turborepo root
-├── turbo.json
-└── tsconfig.json
-```
