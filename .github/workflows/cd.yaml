@@ -51,3 +51,53 @@ jobs:
         run: |
           bun run docker:build:release
           bun run docker:push:release
+
+  deploy:
+    needs: cd
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Deploy Belong
+        run: |
+          ssh -o "StrictHostKeyChecking no" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_NAME }} "
+            echo "Starting SSH agent and adding key"
+            eval "$(ssh-agent -s)"
+
+            echo "Logging into GitHub Container Registry"
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+            if [ ! -d "belong" ]; then
+              git clone https://${{ secrets.GHCR_PAT }}@github.com/rodneyosodo/belong.git
+            fi
+
+            if [ -d "belong" ]; then
+              cd belong
+              echo "Pulling latest code from repository"
+              git pull
+            else
+              echo "Failed to access belong directory"
+              exit 1
+            fi
+
+            echo "Pulling latest image"
+            docker compose -f docker-compose.yml --env-file .env pull
+
+            echo "Deploying backend"
+            docker compose -f docker-compose.yml --env-file .env up -d
+          "
