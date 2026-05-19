@@ -58,13 +58,13 @@ jobs:
 
     permissions:
       contents: read
-      packages: write
+      packages: read
 
     steps:
       - name: Checkout main
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Setup Tailscale
         uses: tailscale/github-action@v4
@@ -74,25 +74,30 @@ jobs:
           tags: tag:ci
 
       - name: Deploy Belong
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USERNAME: ${{ github.actor }}
         run: |
-          ssh -o "StrictHostKeyChecking no" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_NAME }} "
-            echo "Starting SSH agent and adding key"
-            eval "$(ssh-agent -s)"
-
+          ssh -o "StrictHostKeyChecking no" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_NAME }} << DEPLOY
             echo "Logging into GitHub Container Registry"
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
 
             if [ ! -d "belong" ]; then
-              git clone https://${{ secrets.GHCR_PAT }}@github.com/rodneyosodo/belong.git
+              git clone https://${GHCR_TOKEN}@github.com/rodneyosodo/belong.git
             fi
 
             if [ -d "belong" ]; then
               cd belong
               echo "Pulling latest code from repository"
+              git remote set-url origin https://${GHCR_TOKEN}@github.com/rodneyosodo/belong.git
               git pull
             else
               echo "Failed to access belong directory"
               exit 1
+            fi
+
+            if [ ! -f .env ]; then
+              cp example.env .env
             fi
 
             echo "Pulling latest image"
@@ -100,4 +105,4 @@ jobs:
 
             echo "Deploying backend"
             docker compose -f docker-compose.yml --env-file .env up -d
-          "
+          DEPLOY
