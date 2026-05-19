@@ -17,6 +17,7 @@ export default defineConfig({
   ],
   server: {
     port: 5091,
+    allowedHosts: true,
   },
   resolve: {
     alias: {
