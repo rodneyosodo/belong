@@ -82,13 +82,12 @@ jobs:
             echo '${GHCR_TOKEN}' | docker login ghcr.io -u '${GHCR_USERNAME}' --password-stdin
 
             if [ ! -d 'belong' ]; then
-              git clone https://'${GHCR_TOKEN}'@github.com/rodneyosodo/belong.git
+              git clone https://github.com/rodneyosodo/belong.git
             fi
 
             if [ -d 'belong' ]; then
               cd belong
               echo 'Pulling latest code from repository'
-              git remote set-url origin https://'${GHCR_TOKEN}'@github.com/rodneyosodo/belong.git
               git pull
             else
               echo 'Failed to access belong directory'
