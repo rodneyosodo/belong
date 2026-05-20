@@ -80,11 +80,7 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              onClick={() => navigate({ to: '/' })}
-              tooltip="Lineage"
-            >
+            <SidebarMenuButton size="lg" onClick={() => navigate({ to: '/' })} tooltip="Lineage">
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                 <GitBranchIcon className="size-4" />
               </div>
