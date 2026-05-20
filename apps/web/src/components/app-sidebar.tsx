@@ -4,6 +4,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -76,17 +77,25 @@ export function AppSidebar({ onTreesChanged: _onTreesChanged, ...props }: AppSid
 
   return (
     <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              onClick={() => navigate({ to: '/' })}
+              tooltip="Lineage"
+            >
+              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                <GitBranchIcon className="size-4" />
+              </div>
+              <div className="grid flex-1 text-start leading-tight">
+                <span className="truncate text-lg font-semibold">Lineage</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <div className="flex items-center gap-3 px-2 py-3">
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-10 items-center justify-center rounded-lg">
-              <GitBranchIcon className="size-5" />
-            </div>
-            <div className="grid flex-1 text-start leading-tight">
-              <span className="truncate text-lg font-semibold">Lineage</span>
-            </div>
-          </div>
-        </SidebarGroup>
         {loaded && <NavMain items={navMain} />}
         <SidebarGroup>
           <SidebarMenu>
