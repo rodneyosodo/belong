@@ -28,7 +28,7 @@ services:
       retries: 5
 
   backend:
-    image: ghcr.io/rodneyosodo/belong/backend:latest
+    image: ghcr.io/rodneyosodo/belong/backend:${BELONG_IMAGE_TAG:-latest}
     container_name: belong-backend
     restart: on-failure
     networks:
@@ -54,7 +54,7 @@ services:
         condition: service_healthy
 
   web:
-    image: ghcr.io/rodneyosodo/belong/web:latest
+    image: ghcr.io/rodneyosodo/belong/web:${BELONG_IMAGE_TAG:-latest}
     container_name: belong-web
     restart: on-failure
     networks:
