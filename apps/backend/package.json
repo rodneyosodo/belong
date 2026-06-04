@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
-    "better-auth": "^1.6.11",
+    "better-auth": "^1.6.14",
     "elysia": "^1.4.28",
-    "nodemailer": "^8.0.7",
-    "pg": "^8.20.0"
+    "nodemailer": "^8.0.10",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@types/nodemailer": "^8.0.0",
