@@ -19,7 +19,9 @@
     "docker:build:release": "TAG=$(node -p \"require('./package.json').version\") turbo docker:build",
     "docker:push:release": "TAG=$(node -p \"require('./package.json').version\") turbo docker:push",
     "docker:up": "docker compose -f docker-compose.yml --env-file .env up -d",
-    "docker:down": "docker compose -f docker-compose.yml --env-file .env down"
+    "docker:down": "docker compose -f docker-compose.yml --env-file .env down",
+    "docker:backend:start": "docker compose -f apps/backend/compose-dev.yaml --env-file apps/backend/.env up -d",
+    "docker:backend:stop": "docker compose -f apps/backend/compose-dev.yaml --env-file apps/backend/.env down"
   },
   "devDependencies": {
     "oxfmt": "^0.53.0",
