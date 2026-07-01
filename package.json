@@ -24,9 +24,9 @@
     "docker:backend:stop": "docker compose -f apps/backend/compose-dev.yaml --env-file apps/backend/.env down"
   },
   "devDependencies": {
-    "oxfmt": "^0.53.0",
-    "oxlint": "^1.68.0",
-    "turbo": "^2.9.16",
+    "oxfmt": "^0.57.0",
+    "oxlint": "^1.72.0",
+    "turbo": "^2.10.2",
     "typescript": "6.0.3"
   },
   "engines": {
