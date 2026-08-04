@@ -24,10 +24,10 @@
     "docker:backend:stop": "docker compose -f apps/backend/compose-dev.yaml --env-file apps/backend/.env down"
   },
   "devDependencies": {
-    "oxfmt": "^0.53.0",
-    "oxlint": "^1.68.0",
-    "turbo": "^2.9.16",
-    "typescript": "6.0.3"
+    "oxfmt": "^0.61.0",
+    "oxlint": "^1.76.0",
+    "turbo": "^2.10.7",
+    "typescript": "7.0.2"
   },
   "engines": {
     "node": ">=20"
