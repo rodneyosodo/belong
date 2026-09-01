@@ -1,11 +1,11 @@
-FROM oven/bun:1.3-alpine AS build
+FROM oven/bun:1.4-alpine AS build
 
 WORKDIR /app
 
 COPY apps/backend/package.json ./
 RUN bun install --production
 
-FROM oven/bun:1.3-alpine AS run
+FROM oven/bun:1.4-alpine AS run
 
 ARG VERSION
 ARG REVISION
