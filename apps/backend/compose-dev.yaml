@@ -8,7 +8,7 @@ volumes:
 
 services:
   belong-backend-db:
-    image: docker.io/postgres:18.4-alpine3.23
+    image: docker.io/postgres:18.6-alpine3.23
     container_name: belong-backend-db
     restart: on-failure
     networks:
